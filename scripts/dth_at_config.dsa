@@ -1,0 +1,708 @@
+eval(include( "dth_at_generic_helpers" ));
+
+/*********************************************************************/
+// DthAutoToolEditModeConfig constructor
+function DthAutoToolEditModeConfig( oConfig ) {
+    this.load( oConfig );
+}
+
+Object.defineProperty( DthAutoToolEditModeConfig.prototype, "isEnabled", {
+    get: function() {
+        return this._bIsEnabled;
+    }
+} );
+
+Object.defineProperty( DthAutoToolEditModeConfig.prototype, "exportableName", {
+    get: function() {
+        return this._sExportableName;
+    }
+} );
+
+Object.defineProperty( DthAutoToolEditModeConfig.prototype, "clothingName", {
+    get: function() {
+        return this._sClothingName;
+    }
+} );
+
+Object.defineProperty( DthAutoToolEditModeConfig.prototype, "withClothing", {
+    get: function() {
+        return this._bWithClothing;
+    }
+} );
+
+/*********************************************************************/
+// Function to load & validate edit mode given available exportables
+DthAutoToolEditModeConfig.prototype.load = function( oConfig ) {
+    if( !oConfig.is_enabled ) {
+        this._bIsEnabled = false;
+        return;
+    }
+
+    Assert.NotNullOrEmpty( oConfig.exportable_name, "Missing edit mode exportable name" );
+    this._sExportableName = oConfig.exportable_name;
+
+    if( oConfig.clothing_name ) {
+        this._sClothingName = oConfig.clothing_name
+        this._bWithClothing = true;
+    }
+
+    this._bIsEnabled = true;
+}
+
+/*********************************************************************/
+// DthAutoToolExportConfig constructor
+function DthAutoToolExportConfig( oConfig ) {
+    this.load( oConfig );
+}
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "saganAlembicExportDirAbsPath", {
+    get: function() {
+        return this._oSaganAlembicExportDir.canonicalPath();
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "saganAlembicExportDir", {
+    get: function() {
+        return this._oSaganAlembicExportDir;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "dazToMayaExportDirAbsPath", {
+    get: function() {
+        return this._oDazToMayaExportDir.canonicalPath();
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "dazToMayaExportDir", {
+    get: function() {
+        return this._oDazToMayaExportDir;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "defaultExportDirAbsPath", {
+    get: function() {
+        return this._oDefaultExportDir.canonicalPath();
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "defaultExportDir", {
+    get: function() {
+        return this._oDefaultExportDir;
+    }
+} );
+
+/*********************************************************************/
+// Function to load parsed JSON configuration object
+DthAutoToolExportConfig.prototype.load = function( oConfig ) {
+    var sSaganAlembicExportDirectory= Cast.AsNotNullOrEmpty( oConfig.sagan_alembic_export_directory, "Directory path for Sagan Alembic Exporter output must be provided" );
+    var sDazToMayaExportDirectory = Cast.AsNotNullOrEmpty( oConfig.daz_to_maya_export_directory, "Directory path for Daz To Maya Exporter output must be provided" );
+    var sDefaultExportOutputDirectory = Cast.AsNotNullOrEmpty( oConfig.default_output_directory, "Directory path for default export output must be provided" );
+
+    this._oSaganAlembicExportDir = this._buildDirInfoFromPath( sSaganAlembicExportDirectory );
+    this._oDazToMayaExportDir = this._buildDirInfoFromPath( sDazToMayaExportDirectory );
+    this._oDefaultExportDir = this._buildDirInfoFromPath( sDefaultExportOutputDirectory );
+    //var aFiles = oSaganAlembicExportDir.entryList( "*.dsa", DzDir.Files, DzDir.Name );
+};
+
+/*********************************************************************/
+// Function to build validated DzDir from string path
+DthAutoToolExportConfig.prototype._buildDirInfoFromPath = function( sPath ) {
+    var oDirInfo = new DzDir( sPath );
+
+    if( sPath !== oDirInfo.absolutePath() ) {
+        oDirInfo = new DzDir( "%1/%2".arg( getScriptPath() ).arg( sPath ) );
+    }
+
+    if( !oDirInfo.exists() ) {
+        throw new Error( "%1: %2".arg( "Directory does not exist" ).arg( oDirInfo.absolutePath() ) );
+    }
+
+    return oDirInfo;
+};
+
+/*********************************************************************/
+// DthAutoToolExecutableConfig constructor
+function DthAutoToolExecutableConfig( oConfig ) {
+    this.load( oConfig );
+}
+
+Object.defineProperty( DthAutoToolExecutableConfig.prototype, "executableFileInfo", {
+    get: function() {
+        return this._oExecutableFileInfo;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExecutableConfig.prototype, "executableConfigFileInfo", {
+    get: function() {
+        return this._oExecutableConfigFileInfo;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExecutableConfig.prototype, "alembicExporterTemplateConfigFileInfo", {
+    get: function() {
+        return this._oAlembicExporterTemplateConfigFileInfo;
+    }
+} );
+
+/*********************************************************************/
+// Function to load parsed JSON configuration object
+DthAutoToolExecutableConfig.prototype.load = function( oConfig ) {
+    var sExecutablePath = Cast.AsNotNullOrEmpty( oConfig.executable_path, "Path to DTH AutoTool executable must be provided" );
+    this._oExecutableFileInfo = this._buildFileInfoFromPath( sExecutablePath, "exe" );
+
+    var sExecutableConfigPath = oConfig.executable_config_path;
+    if( !sExecutableConfigPath || sExecutableConfigPath === "" ) {
+        sExecutableConfigPath = "./config.json";
+    }
+    this._oExecutableConfigFileInfo = this._buildFileInfoFromPath( sExecutableConfigPath, "json" );
+
+    var sAlembicExporterConfigPath = oConfig.alembic_exporter_template_config_path;
+    if( !sAlembicExporterConfigPath || sAlembicExporterConfigPath === "" ) {
+        sAlembicExporterConfigPath = "./config.sagan";
+    }
+    this._oAlembicExporterTemplateConfigFileInfo = this._buildFileInfoFromPath( sAlembicExporterConfigPath, "sagan" );
+};
+
+/*********************************************************************/
+// Function to build validated DzFileInfo from string path
+DthAutoToolExecutableConfig.prototype._buildFileInfoFromPath = function( sPath, sSuffix ) {
+    var oFileInfo = new DzFileInfo( sPath );
+
+    if( sPath !== oFileInfo.absoluteFilePath() ) {
+        oFileInfo = new DzFileInfo( "%1/%2".arg( getScriptPath() ).arg( sPath ) );
+    }
+
+    if( !oFileInfo.exists() ) {
+        throw new Error( "%1: %2".arg( "File does not exist" ).arg( oFileInfo.absoluteFilePath() ) );
+    }
+
+    if( sSuffix && oFileInfo.suffix() !== sSuffix ) {
+        throw new Error( "Expected file suffix: %1 for file: %3".arg( sSuffix ).arg( oFileInfo.absoluteFilePath() ) );
+    }
+
+    return oFileInfo;
+};
+
+/*********************************************************************/
+// DthAutoToolLayer constructor
+function DthAutoToolLayerGroup( sName, aLayers ) {
+    this._sName = Cast.AsNotNullOrEmpty( sName, "Valid name must be provided for layer" );
+    this._aLayers = Cast.AsNotEmptyArray( aLayers, "Group must contain at least one layer: %1".arg( this.name ) );
+}
+
+Object.defineProperty( DthAutoToolLayerGroup.prototype, "name", {
+    get: function() {
+        return this._sName;
+    }
+} );
+
+Object.defineProperty( DthAutoToolLayerGroup.prototype, "layers", {
+    get: function() {
+        return this._aLayers;
+    },
+    set: function( aLayers ) {
+        Assert.IsArray( aLayers, "Attempt to set a non-array object to the layer group: %1".arg( this.name ) );
+        this._aLayers = aLayers;
+    },
+} );
+
+DthAutoToolLayerGroup.prototype.prepend = function( aLayers ) {
+    Assert.IsArray( aLayers, "Attempt to prepend a non-array object to the layer group: %1".arg( this.name ) );
+    this._aLayers.unshift( aLayers );
+};
+
+DthAutoToolLayerGroup.prototype.append = function( aLayers ) {
+    Assert.IsArray( aLayers, "Attempt to append a non-array object to the layer group: %1".arg( this.name ) );
+    this._aLayers.push( aLayers );
+};
+
+/*********************************************************************/
+// DthAutoToolBaseTemplate constructor
+function DthAutoToolBaseTemplate( oConfig ) {
+    DthAutoToolBaseTemplate.prototype.load.call( this, oConfig );
+}
+
+/*********************************************************************/
+// All possible operation modes to choose from
+DthAutoToolBaseTemplate.LayerGroupsProperties = {
+    Categories: [ "character", "morphs", "clothing" ],
+    ExtOptions: [ "append", "prepend", "override" ]
+};
+
+Object.defineProperty( DthAutoToolBaseTemplate.prototype, "name", {
+    get: function() {
+        return this._sName;
+    }
+} );
+
+Object.defineProperty( DthAutoToolBaseTemplate.prototype, "characterLayerGroups", {
+    get: function() {
+        return this._mCharacterLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolBaseTemplate.prototype, "clothingLayerGroups", {
+    get: function() {
+        return this._mClothingLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolBaseTemplate.prototype, "morphsLayerGroups", {
+    get: function() {
+        return this._mMorphsLayerGroups;
+    }
+} );
+
+/*********************************************************************/
+// Function to load configuration from dynamic object
+DthAutoToolBaseTemplate.prototype.load = function( oConfig ) {
+    this._sName = Cast.AsNotNullOrEmpty( oConfig.name, "Valid name must be provided for template" );
+
+//    this._mCharacterLayerGroups = new OrderedKeyValueSet();
+//    this._mClothingLayerGroups = new OrderedKeyValueSet();
+//    this._mMorphsLayerGroups = new OrderedKeyValueSet();
+//
+//    if( oConfig.character ) {
+//        this._loadConfigLayerGroups( oConfig.character, this.characterLayerGroups );
+//    }
+//
+//    if( oConfig.clothing ) {
+//        this._loadConfigLayerGroups( oConfig.clothing, this.clothingLayerGroups );
+//    }
+//
+//    if( oConfig.morphs ) {
+//        this._loadConfigLayerGroups( oConfig.morphs, this.morphsLayerGroups );
+//    }
+
+    var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
+    var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
+
+    for ( var i = 0; i<aLayerGroupsProperties.length; i++ ) {
+        var sBasePropName = aLayerGroupsProperties[ i ];
+        var sUpperCaseBasePropName = Convert.CapitalizeFirstLetter( sBasePropName );
+        var sPrivatePropName = "_m%1LayerGroups".arg( sUpperCaseBasePropName );
+
+        this[ sPrivatePropName ] = new OrderedKeyValueSet();
+
+        if( oConfig[ sBasePropName ] ) {
+            this._loadConfigLayerGroups( oConfig[ sBasePropName ], this[ sPrivatePropName ] );
+        }
+    }
+};
+
+/*********************************************************************/
+// Function to load layer groups into target data structure
+DthAutoToolBaseTemplate.prototype._loadConfigLayerGroups = function( oLayerGroupsConfig, oLoadTarget ) {
+    var aLayerGroups = Cast.AsNotEmptyArray( oLayerGroupsConfig, "Layer groups list must not be empty" );
+    for( var i = 0; i<aLayerGroups.length; i+=1 ) {
+        var oLayerGroupConfig = aLayerGroups[ i ];
+        Assert.NotNullOrEmpty( oLayerGroupConfig.name, "Layer group name must not be empty" )
+        Assert.NotEmptyArray( oLayerGroupConfig.layers, "Layer group must contain at least one layer: %1".arg( oLayerGroupConfig.name ) );
+        var oLayerGroup = new DthAutoToolLayerGroup( oLayerGroupConfig.name, oLayerGroupConfig.layers );
+        oLoadTarget.add( oLayerGroup.name, oLayerGroup );
+    }
+}
+
+/*********************************************************************/
+// DthAutoToolExportable constructor
+function DthAutoToolExportable( oConfig ) {
+    DthAutoToolBaseTemplate.call( this, oConfig );
+    DthAutoToolExportable.prototype.load.call( this, oConfig );
+}
+DthAutoToolExportable.prototype = Object.create( DthAutoToolBaseTemplate.prototype );
+DthAutoToolExportable.prototype.constructor = DthAutoToolExportable;
+
+Object.defineProperty( DthAutoToolExportable.prototype, "templates", {
+    get: function() {
+        return this._aTemplateNames;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportable.prototype, "prependCharacterLayerGroups", {
+    get: function() {
+        return this._mPrependCharacterLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "overrideCharacterLayerGroups", {
+    get: function() {
+        return this._mOverrideCharacterLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "appendCharacterLayerGroups", {
+    get: function() {
+        return this._mAppendCharacterLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportable.prototype, "prependClothingLayerGroups", {
+    get: function() {
+        return this._mPrependClothingLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "overrideClothingLayerGroups", {
+    get: function() {
+        return this._mOverrideClothingLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "appendClothingLayerGroups", {
+    get: function() {
+        return this._mAppendClothingLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportable.prototype, "prependMorphsLayerGroups", {
+    get: function() {
+        return this._mPrependMorphsLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "overrideMorphsLayerGroups", {
+    get: function() {
+        return this._mOverrideMorphsLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "appendMorphsLayerGroups", {
+    get: function() {
+        return this._mAppendMorphsLayerGroups;
+    }
+} );
+
+/*********************************************************************/
+// Function to load exportable configuration from dynamic object
+DthAutoToolExportable.prototype.load = function( oConfig ) {
+    this._sName = Cast.AsNotNullOrEmpty( oConfig.name, "Valid name must be provided for template" );
+    this._aTemplateNames = []
+    if( oConfig.templates ) {
+        var aTemplateNamesConfig = Cast.AsArray ( oConfig.templates );
+        for( var i=0; i<aTemplateNamesConfig.length; i+=1 ) {
+            Assert.NotNullOrEmpty( aTemplateNamesConfig[ i ], "Exportable templates must be not empty string values" );
+        }
+        this._aTemplateNames = aTemplateNamesConfig;
+    }
+//
+//    this._mPrependCharacterLayerGroups = new OrderedKeyValueSet();
+//    this._mOverrideCharacterLayerGroups = new OrderedKeyValueSet();
+//    this._mAppendCharacterLayerGroups = new OrderedKeyValueSet();
+//
+//    this._mPrependClothingLayerGroups = new OrderedKeyValueSet();
+//    this._mOverrideClothingLayerGroups = new OrderedKeyValueSet();
+//    this._mAppendClothingLayerGroups = new OrderedKeyValueSet();
+//
+//    this._mPrependMorphsLayerGroups = new OrderedKeyValueSet();
+//    this._mOverrideMorphsLayerGroups = new OrderedKeyValueSet();
+//    this._mAppendMorphsLayerGroups = new OrderedKeyValueSet();
+
+    var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
+    var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
+
+    for ( var i = 0; i<aLayerGroupsProperties.length; i++ ) {
+        var sBasePropName = aLayerGroupsProperties[ i ];
+
+        for ( var j = 0; j<aLayerGroupsPropertiesPrefixes.length; j++ ) {
+            var sPrefixedPropName = "%1_%2".arg( aLayerGroupsPropertiesPrefixes[ j ] ).arg( sBasePropName );
+            if ( oConfig[ sBasePropName ] && oConfig[ sPrefixedPropName ] ) {
+                throw new Error("\"%1\" property cannot be used along with \"%2\" in exportable: %3".arg( sBasePropName ).arg( sPrefixedPropName ).arg( oConfig.name ) );
+            }
+        }
+    }
+
+    for ( var i = 0; i<aLayerGroupsProperties.length; i++ ) {
+        var sBasePropName = aLayerGroupsProperties[ i ];
+
+        for ( var j = 0; j<aLayerGroupsPropertiesPrefixes.length; j++ ) {
+            var sPrefix = aLayerGroupsPropertiesPrefixes[ j ];
+            var sPrefixedPropName = "%1_%2".arg( aLayerGroupsPropertiesPrefixes[ j ] ).arg( sBasePropName );
+
+            var sUpperCasePrefix = Convert.CapitalizeFirstLetter( sPrefix );
+            var sUpperCaseBasePropName = Convert.CapitalizeFirstLetter( sBasePropName );
+            var sPrivatePropName = "_m%1%2LayerGroups".arg( sUpperCasePrefix ).arg( sUpperCaseBasePropName );
+
+            this[ sPrivatePropName ] = new OrderedKeyValueSet();
+
+            if( oConfig[ sPrefixedPropName ] ) {
+                this._loadConfigLayerGroupsExt( oConfig[ sPrefixedPropName ], this[ sPrivatePropName ] );
+            }
+        }
+    }
+};
+
+
+/*********************************************************************/
+// Function to load exportable layer groups extensions
+DthAutoToolExportable.prototype._loadConfigLayerGroupsExt = function( oLayerGroupsConfig, oLoadTarget ) {
+    var aLayerGroups = Cast.AsNotEmptyArray( oLayerGroupsConfig, "Layer groups list must not be empty" );
+    for( var i = 0; i<aLayerGroups.length; i+=1 ) {
+        var oLayerGroupConfig = aLayerGroups[ i ];
+        Assert.NotNullOrEmpty( oLayerGroupConfig.name, "Layer group name must not be empty" )
+        Assert.NotEmptyArray( oLayerGroupConfig.layers, "Layer group must contain at least one layer: %1".arg( oLayerGroupConfig.name ) );
+        var oLayerGroup = new DthAutoToolLayerGroup( oLayerGroupConfig.name, oLayerGroupConfig.layers );
+        oLoadTarget.add( oLayerGroup.name, oLayerGroup );
+    }
+};
+
+/*********************************************************************/
+// Function to merge input template with
+DthAutoToolExportable.prototype.apply = function( oTemplate ) {
+    if ( oTemplate instanceof DthAutoToolBaseTemplate ) {
+        print( "merging with %1".arg( this.name ) );
+    } else {
+		throw new Error( "Unexpected value passed in as a template to merge with: %1".arg( this.name ) );
+    }
+};
+
+/*********************************************************************/
+// DthAutoToolConfiguration constructor
+function DthAutoToolConfiguration( sPath ) {
+    this.load( sPath );
+    this.parse();
+}
+
+
+Object.defineProperty( DthAutoToolConfiguration.prototype, "configurationVersion", {
+    get: function() {
+        return this._sVersion;
+    }
+} );
+
+Object.defineProperty( DthAutoToolConfiguration.prototype, "editMode", {
+    get: function() {
+        return this._oEditMode;
+    }
+} );
+
+Object.defineProperty( DthAutoToolConfiguration.prototype, "dthAutoToolConfig", {
+    get: function() {
+        return this._oDthAutoToolConfig;
+    }
+} );
+
+Object.defineProperty( DthAutoToolConfiguration.prototype, "exportSettings", {
+    get: function() {
+        return this._oExportSettingsConfig;
+    }
+} );
+
+Object.defineProperty( DthAutoToolConfiguration.prototype, "baseTemplates", {
+    get: function() {
+        return this._mBaseTemplates;
+    }
+} );
+
+Object.defineProperty( DthAutoToolConfiguration.prototype, "exportables", {
+    get: function() {
+        return this._mExportables;
+    }
+} );
+
+/*********************************************************************/
+// Function to load configuration from JSON file
+DthAutoToolConfiguration.prototype.load = function( sPath ) {
+    // getScriptPath() should be available as top-level DTH-AutoTool function
+    if( !sPath ) {
+        throw new Error( "Path to the DTH AutoTool configuration file not provided" );
+    }
+
+    // check if path is relative
+    if ( /^(\.{1,2}\/)/.test( sPath ) || sPath.indexOf( "/" ) < 0 ) {
+        sPath = "%1/%2".arg( getScriptPath() ).arg( sPath );
+    }
+
+    var oConfigFileInfo = new DzFileInfo( sPath );
+    if( !oConfigFileInfo.exists() ) {
+        throw new Error( "DTH AutoTool configuration file does not exist: %1".arg( sPath ) );
+    }
+
+    var sAbsPath;
+	if( typeof( oConfigFileInfo.canonicalPath ) == "function" ) {
+		sAbsPath = oConfigFileInfo.canonicalFilePath();
+	} else {
+		sAbsPath = oConfigFileInfo.filePath();
+	}
+    oConfigFileInfo.deleteLater();
+
+    var oJsonConfigFile = new DzFile( sAbsPath );
+    if( !oJsonConfigFile.open( DzFile.ReadOnly ) ) {
+        throw new Error( "Failed to open DTH AutoTool configuration file for reading: %1".arg( sAbsPath ) );
+    }
+
+    var sJsonConfig = oJsonConfigFile.read();
+    oJsonConfigFile.close();
+    oJsonConfigFile.deleteLater();
+
+    this._sRawJson = sJsonConfig;
+    this._oRawJson = JSON.parse( this._sRawJson );
+};
+
+/*********************************************************************/
+// Function to parse configuration from JSON string
+DthAutoToolConfiguration.prototype.parse = function( sJson ) {
+    if( sJson ) {
+        this._sRawJson = sJson;
+        this._oRawJson = JSON.parse( this._sRawJson );
+    }
+
+    this._sVersion = "0.1";
+    if( this._oRawJson.version ) {
+        this._sVersion = this._oRawJson.version;
+    }
+
+    var aExportablesCfg = Cast.AsNotEmptyArray( this._oRawJson.exportables, "Exportables must be a non-empty array" );
+    var aBaseTemplatesCfg = Cast.AsArray( this._oRawJson.templates, "Templates must be a non-empty array" );
+
+    this._mBaseTemplates = new OrderedKeyValueSet();
+    for( var i=0; i<aBaseTemplatesCfg.length; i+=1 ) {
+        var oBaseTemplateConfig = aBaseTemplatesCfg[ i ];
+        var oBaseTemplate = new DthAutoToolBaseTemplate( oBaseTemplateConfig );
+        this._mBaseTemplates.add( oBaseTemplate.name, oBaseTemplate );
+    }
+
+    this._mExportables = new OrderedKeyValueSet();
+    for( var i=0; i<aExportablesCfg.length; i+=1 ) {
+        var oExportableConfig = aExportablesCfg[ i ];
+        var oExportable = new DthAutoToolExportable( oExportableConfig );
+        this._mExportables.add( oExportable.name, oExportable );
+    }
+
+    this._oEditMode = new DthAutoToolEditModeConfig( this._oRawJson.edit_mode, this._mExportables );
+
+    this._oDthAutoToolConfig = new DthAutoToolExecutableConfig( this._oRawJson.dth_autotool );
+    this._oExportSettingsConfig = new DthAutoToolExportConfig( this._oRawJson.export_settings );
+};
+
+/*********************************************************************/
+// Function to build ordered list of assets to create exportable
+DthAutoToolConfiguration.prototype.build = function( sName ) {
+    Assert.NotNullOrEmpty( sName, "Invalid exportable name to build" );
+
+    var oExportable = this.exportables.get( sName );
+    if( !oExportable ) {
+        throw new Error( "Exportable with this name does not exist: %1".arg( sName ) );
+    }
+
+//    var mExpCharacterLayerGroups = new OrderedKeyValueSet();
+//    var mExpClothingLayerGroups = new OrderedKeyValueSet();
+//    var mExpMorphsLayerGroups = new OrderedKeyValueSet();
+
+    var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
+    var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
+
+    var mProperties = new OrderedKeyValueSet();
+    for( var p=0; p<aLayerGroupsProperties.length; p+=1 ) {
+        var sPropertyName = aLayerGroupsProperties[ p ];
+        var sBasePropName = "%1LayerGroups".arg( sPropertyName );
+
+        // if exportable replaces whatever template layers, use those and skip the rest of logic
+        if( oExportable[ sBasePropName ] && oExportable[ sBasePropName ].keys().length > 0 ) {
+            mProperties.add( sPropertyName, oExportable[ sBasePropName ] );
+            continue;
+        }
+
+        var mExpLayerGroups = new OrderedKeyValueSet();
+        mProperties.add( sPropertyName, mExpLayerGroups );
+
+        for( var t=0; t<oExportable.templates.length; t+=1 ) {
+            var sTemplate = oExportable.templates[ t ];
+            var oBaseTemplate = this.baseTemplates.get( sTemplate );
+            if( !oBaseTemplate ) {
+                throw new Error( "Invalid template name provided for exportable '%1': %2".arg( sName ).arg( sTemplate ) );
+            }
+            mExpLayerGroups.union( oBaseTemplate[ sBasePropName ], "back" );
+        }
+
+        for( var pp=0; pp<aLayerGroupsPropertiesPrefixes.length; pp+=1 ) {
+            var sPropertyPrefixName = aLayerGroupsPropertiesPrefixes[ pp ];
+            var sExportablePropName = "%1%2LayerGroups".arg( sPropertyPrefixName ).arg( Convert.CapitalizeFirstLetter( sPropertyName ) );
+            switch ( sPropertyPrefixName ) {
+                case "prepend":
+                    mExpLayerGroups.union( oExportable[ sExportablePropName ], "front" );
+                    break;
+                case "append":
+                    mExpLayerGroups.union( oExportable[ sExportablePropName ], "back" );
+                    break;
+                case "override":
+                    mExpLayerGroups.override( oExportable[ sExportablePropName ] );
+                    break;
+                default: throw new Error( "Unsupported property prefix: %1".arg( sPropertyPrefixName ) );
+           }
+        }
+    }
+
+//    for( var t=0; t<oExportable.templates.length; t+=1 ) {
+//        var sTemplate = oExportable.templates[ t ];
+//        var oBaseTemplate = this.baseTemplates.get( sTemplate );
+//        if( !oBaseTemplate ) {
+//            throw new Error( "Invalid template name provided for exportable '%1': %2".arg( sName ).arg( sTemplate ) );
+//        }
+//        mExpCharacterLayerGroups.union( oBaseTemplate.characterLayerGroups, "back" );
+//        mExpClothingLayerGroups.union( oBaseTemplate.clothingLayerGroups, "back" );
+//        mExpMorphsLayerGroups.union( oBaseTemplate.morphsLayerGroups, "back" );
+//    }
+//
+//    mExpCharacterLayerGroups.union( oExportable.prependCharacterLayerGroups, "front" );
+//    mExpClothingLayerGroups.union( oExportable.prependClothingLayerGroups, "front" );
+//    mExpMorphsLayerGroups.union( oExportable.prependMorphsLayerGroups, "front" );
+//
+//    mExpCharacterLayerGroups.union( oExportable.appendCharacterLayerGroups, "back" );
+//    mExpClothingLayerGroups.union( oExportable.appendClothingLayerGroups, "back" );
+//    mExpMorphsLayerGroups.union( oExportable.appendMorphsLayerGroups, "back" );
+//
+//
+//    mExpCharacterLayerGroups.override( oExportable.overrideCharacterLayerGroups );
+//    mExpClothingLayerGroups.override( oExportable.overrideClothingLayerGroups );
+//    mExpMorphsLayerGroups.override( oExportable.overrideMorphsLayerGroups );
+
+    return new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mProperties.get( "clothing" ), mProperties.get( "morphs" ) );
+};
+
+/*********************************************************************/
+// DthAutoToolExportable constructor
+function DthAutoToolExportPlan( sName, mCharacter, mClothing, mMorphs ) {
+    this.load( sName, mCharacter, mClothing, mMorphs );
+}
+
+Object.defineProperty( DthAutoToolExportPlan.prototype, "name", {
+    get: function() {
+        return this._sName;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportPlan.prototype, "character", {
+    get: function() {
+        if( !this._cachedCharacterLayerGroups ) {
+            this._cachedCharacterLayerGroups = this._characterLayerGroups.values().reduce( function( r, s ) { return r.concat( s.layers ); }, [] );
+        }
+        return this._cachedCharacterLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportPlan.prototype, "clothing", {
+    get: function() {
+        if( !this._cachedClothingLayerGroups ) {
+            this._cachedClothingLayerGroups = this._clothingLayerGroups.values();
+        }
+        return this._cachedClothingLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportPlan.prototype, "morphs", {
+    get: function() {
+        if( !this._cachedMorphsLayerGroups ) {
+            this._cachedMorphsLayerGroups = this._morphsLayerGroups.values().reduce( function( r, s ) { return r.concat( s.layers ); }, [] );
+        }
+        return this._cachedMorphsLayerGroups;
+    }
+} );
+
+/*********************************************************************/
+// Function to populate internal layer groups variables.
+DthAutoToolExportPlan.prototype.load = function( sName, mCharacter, mClothing, mMorphs ) {
+    this._sName = Cast.AsNotNullOrEmpty( sName, "Exportable plan name must not be null or empty" );
+
+    this._characterLayerGroups = mCharacter;
+    this._clothingLayerGroups = mClothing;
+    this._morphsLayerGroups = mMorphs;
+
+    // clear cache
+    this._cachedClothingLayerGroups = null;
+    this._cachedClothingLayerGroups = null;
+    this._cachedMorphsLayerGroups = null;
+};

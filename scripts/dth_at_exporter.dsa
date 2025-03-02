@@ -1,0 +1,475 @@
+eval(include( "dth_at_config" ));
+eval(include( "dth_at_library_browser" ));
+eval(include( "dth_at_daz_helpers" ));
+
+/*********************************************************************/
+// DthAutoToolHandler constructor
+function DthAutoToolHandler( oConfig ) {
+    this.init( oConfig );
+}
+
+/*********************************************************************/
+// All possible operation modes to choose from
+DthAutoToolHandler.OpModes = {
+    LoadCharacter: "AutoConfirm/LoadCharacter",
+    LoadClothing: "AutoConfirm/LoadCharacter",
+    LoadAnimation: "AutoConfirm/ResizeTimeline",
+    ExportSaganAlembicV3: "AlembicExport/HandleDialog",
+    ExportDazToMayaFbx: "DazToMaya/HandleDialog"
+};
+
+/*********************************************************************/
+// All possible operation modes to choose from
+DthAutoToolHandler.CmdParams = {
+    ExecutableConfig: "-c",
+    OpModeSelector: "-m",
+    ExportAssetName: "-n",
+    SubDivisionShapesCount: "-s",
+    SaganAlembicExporterTemplateConfigPath: "-a",
+    SaganAlembicExporterOutputPath: "-o",
+    SaganAlembicExporterEndFrame: "-e",
+};
+
+/*********************************************************************/
+// Function initialize DTH AutoTool invoker object
+DthAutoToolHandler.prototype.init = function( oConfig ) {
+    if( !( oConfig instanceof DthAutoToolExecutableConfig ) ) {
+        throw new Error( "Invalid executable configuration object" );
+    }
+    this._oConfig = oConfig;
+};
+
+/*********************************************************************/
+// Function to build DTH AutoTool handler always present cmd parameters.
+DthAutoToolHandler.prototype._buildCommonCmdParams = function( sOpMode ) {
+    Assert.NotNullOrEmpty( sOpMode, "Operation mode must be non-empty string value" );
+    return [
+        this._oConfig.executableFileInfo.absoluteFilePath(),
+        DthAutoToolHandler.CmdParams.ExecutableConfig, this._oConfig.executableConfigFileInfo.absoluteFilePath(),
+        DthAutoToolHandler.CmdParams.OpModeSelector, sOpMode
+    ]
+};
+
+/*********************************************************************/
+// Function to build DTH AutoTool handler export parameters.
+DthAutoToolHandler.prototype._buildOpModeCmdParams = function( sOpMode, mOpModeParams ) {
+    var aOpModeParams = [];
+
+    switch ( sOpMode ) {
+         case DthAutoToolHandler.OpModes.ExportDazToMayaFbx:
+             if( !(mOpModeParams instanceof OrderedKeyValueSet) ) {
+                 throw new Error( "Expected mode specific parameters for operation mode: %1".arg( sOpMode ) );
+             }
+             break;
+         default: break;
+    }
+
+    switch ( sOpMode ) {
+        case DthAutoToolHandler.OpModes.ExportSaganAlembicV3:
+            aOpModeParams.push( DthAutoToolHandler.CmdParams.SaganAlembicExporterTemplateConfigPath );
+            aOpModeParams.push( DzHelpers.ToNativePath( this._oConfig.alembicExporterTemplateConfigFileInfo.absoluteFilePath(), false ) );
+
+            var nEndFrame = Cast.AsNumber(
+                mOpModeParams.get( DthAutoToolHandler.CmdParams.SaganAlembicExporterEndFrame ),
+                "End frame must be a number" );
+            aOpModeParams.push( DthAutoToolHandler.CmdParams.SaganAlembicExporterEndFrame );
+            aOpModeParams.push( nEndFrame );
+
+            var sExportOutputPath = Cast.AsNotNullOrEmpty(
+                mOpModeParams.get( DthAutoToolHandler.CmdParams.SaganAlembicExporterOutputPath ),
+                "Sagan Alembic Export output path must be a valid string path" );
+            aOpModeParams.push( DthAutoToolHandler.CmdParams.SaganAlembicExporterOutputPath );
+            aOpModeParams.push( DzHelpers.ToNativePath( sExportOutputPath, true ) );
+            break;
+        case DthAutoToolHandler.OpModes.ExportDazToMayaFbx:
+            var sExportAssetName = Cast.AsNotNullOrEmpty(
+                    mOpModeParams.get( DthAutoToolHandler.CmdParams.ExportAssetName ),
+                    "Export asset name must be not null or empty string value" );
+            aOpModeParams.push( DthAutoToolHandler.CmdParams.ExportAssetName );
+            aOpModeParams.push( sExportAssetName );
+
+            var nSubDivisionShapesCount = Cast.AsNumber(
+                mOpModeParams.get( DthAutoToolHandler.CmdParams.SubDivisionShapesCount ),
+                "Subdivision shapes count number must be a number" );
+            aOpModeParams.push( DthAutoToolHandler.CmdParams.SubDivisionShapesCount );
+            aOpModeParams.push( nSubDivisionShapesCount );
+            break;
+        default: break;
+   }
+
+    return aOpModeParams;
+};
+
+/*********************************************************************/
+// Function to invoke DTH AutoTool in mode to handle dialog
+// on character asset (layer) loading action.
+DthAutoToolHandler.prototype.run = function( sOpMode, fCallback, bThrowOnStdErr, mOpModeParams ) {
+    Assert.IsFunction( fCallback, "Callback must of type function" );
+
+    var aCommonCmdParams = this._buildCommonCmdParams( Cast.AsNotNullOrEmpty( sOpMode ) );
+    var aOpModeParams = this._buildOpModeCmdParams( sOpMode, mOpModeParams );
+    var aCmdParams = aCommonCmdParams.concat( aOpModeParams );
+
+    var oDthAutoToolProcess = new DzProcess( aCmdParams );
+    oDthAutoToolProcess.workingDirectory = this._oConfig.executableFileInfo.absolutePath();
+
+    var bDthAutoToolProcessExited = false;
+    function OnDthAutoToolExited() { bDthAutoToolProcessExited = true; }
+    oDthAutoToolProcess.processExited.connect( OnDthAutoToolExited );
+
+    //print( "Starting DTH AutoTool handler process -- %1".arg( oDthAutoToolProcess.arguments.join( " " ) ) );
+
+    if( !oDthAutoToolProcess.start() ) {
+        throw new Error( "Failed to start process: %1".arg( this._oConfig.executableFileInfo.absoluteFilePath() ) );
+    }
+
+    var oCallbackExpirationTimer = new DzTimer();
+    oCallbackExpirationTimer.singleShot = true;
+    oCallbackExpirationTimer.start( 3 * 60 * 1000 );
+    // note: this might not save you if fCallback will block the thread
+    oCallbackExpirationTimer.timeout.connect( function() { throw new Error( "Operation timed out for %1".arg( sOpMode ) ); } )
+
+    fCallback(); // do work
+
+    oCallbackExpirationTimer.stop();
+
+    while( !bDthAutoToolProcessExited ) {
+        sleep( 1000 );
+        oDthAutoToolProcess.kill();
+    }
+
+    if( bThrowOnStdErr === true ) {
+        var sDthAutoToolStdError = oDthAutoToolProcess.readStderr();
+        if( sDthAutoToolStdError ) {
+            throw new Error( sDthAutoToolStdError );
+        }
+    }
+
+    return oDthAutoToolProcess.readStdout();
+};
+
+/*********************************************************************/
+// DthAutoToolExporter constructor
+function DthAutoToolExporter( oExportPlan, oDthAutoToolConfig, oExportSettingsConfig ) {
+    this.init( oExportPlan, oDthAutoToolConfig, oExportSettingsConfig );
+}
+
+Object.defineProperty( DthAutoToolExporter.prototype, "clothings", {
+    get: function() { return this._mClothingAssets.keys(); }
+} );
+
+Object.defineProperty( DthAutoToolExporter.prototype, "exportableName", {
+    get: function() { return this._oExportPlan.name; }
+} );
+
+/*********************************************************************/
+// Function initialize DTH AutoTool exporter object
+DthAutoToolExporter.prototype.init = function( oExportPlan, oDthAutoToolConfig, oExportSettingsConfig ) {
+    if( !( oExportPlan instanceof DthAutoToolExportPlan ) ) {
+        throw new Error( "Invalid export plan configuration object" );
+    }
+    this._oPrimaryFigure = null;
+    this._oExportPlan = oExportPlan;
+    this._oDthAutoToolHandler = new DthAutoToolHandler( oDthAutoToolConfig );
+    this._oExportSettings = oExportSettingsConfig;
+
+    this._aCharacterAssets = [];
+    this._aMorphsAssets = [];
+    this._nCurrentClothingIndex = -1;
+    this._mClothingAssets = new OrderedKeyValueSet();
+
+    var oLibBrowser = new DthAutoToolLibraryBrowser();
+
+    for( var t=0; t<this._oExportPlan.character.length; t+=1 ) {
+        var sAssetNamePattern = this._oExportPlan.character[ t ];
+        var oAsset = oLibBrowser.search( sAssetNamePattern );
+        if( oAsset ) {
+            this._aCharacterAssets.push( oAsset );
+        } else {
+            throw new Error( "Asset not found: %1".arg( sAssetNamePattern ) );
+        }
+    }
+
+    for( var t=0; t<this._oExportPlan.morphs.length; t+=1 ) {
+        var sAssetNamePattern = this._oExportPlan.morphs[ t ];
+        var oAsset = oLibBrowser.search( sAssetNamePattern );
+        if( oAsset ) {
+            this._aMorphsAssets.push( oAsset );
+        } else {
+            throw new Error( "Asset not found: %1".arg( sAssetNamePattern ) );
+        }
+    }
+
+    for( var t=0; t<this._oExportPlan.clothing.length; t+=1 ) {
+        var oClothingLayerGroup = this._oExportPlan.clothing[ t ];
+        var aClothingLayerGroupAssets = [];
+        for( var l=0; l<oClothingLayerGroup.layers.length; l+=1 ) {
+            var sAssetNamePattern = oClothingLayerGroup.layers[ l ];
+            var oAsset = oLibBrowser.search( sAssetNamePattern );
+            if( oAsset ) {
+                aClothingLayerGroupAssets.push( oAsset );
+            } else {
+                throw new Error( "Asset not found: %1".arg( sAssetNamePattern ) );
+            }
+        }
+        this._mClothingAssets.add( oClothingLayerGroup.name, aClothingLayerGroupAssets );
+    }
+};
+
+/*********************************************************************/
+// Function to get the first character in the scene as primary figure
+DthAutoToolExporter.prototype.getPrimaryFigure = function() {
+    var oPrimaryFigure;
+    var aSceneSkeletons = Scene.getSkeletonList();
+
+    for( var i = 0; i<aSceneSkeletons.length; i+=1 ) {
+        var oSceneSkeleton = aSceneSkeletons[ i ];
+        if ( oSceneSkeleton.getNodeParent() ) {
+            continue; // we only need top-level figure
+        }
+        if ( oSceneSkeleton.inherits( "DzFigure" ) ) {
+            oPrimaryFigure = oSceneSkeleton;
+        }
+    }
+
+    if ( !oPrimaryFigure ) {
+        throw new Error( "Failed to identify primary figure in the scene" );
+    }
+
+    return oPrimaryFigure;
+};
+
+/*********************************************************************/
+// Function to select the first character in the scene as primary figure
+DthAutoToolExporter.prototype.selectPrimaryFigure = function() {
+    var oPrimaryFigure = this.getPrimaryFigure();
+
+    Scene.selectAllNodes( false ); // in case something is selected already
+    if( !Scene.setPrimarySelection( oPrimaryFigure ) ) {
+        throw new Error( "Failed to set \"%1\" as primary selection".arg( oPrimaryFigure.getLabel() ) );
+    }
+
+    return oPrimaryFigure;
+};
+
+/*********************************************************************/
+// Function to load the character layers into the scene
+DthAutoToolExporter.prototype.loadCharacter = function() {
+    print( "Loading character layers for \"%1\"".arg( this.exportableName ) );
+
+    var oContentMgr = App.getContentMgr();
+
+    for( var c=0; c<this._aCharacterAssets.length; c+=1 ) {
+        var oCharacterAsset = this._aCharacterAssets[ c ];
+        print( "Loading character asset: %1".arg( oCharacterAsset.assetName ) );
+        function callback() {
+            oContentMgr.loadAsset( oCharacterAsset, true );
+        }
+        this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.LoadCharacter, callback, false, null );
+    }
+
+    this._oPrimaryFigure = this.selectPrimaryFigure();
+
+    // Setup default conditions
+    this._oPrimaryFigure.clearAllAnimData();
+    DzHelpers.GetAction( "Clear Figure" ).trigger();
+
+    DzHelpers.ResizePlayRange( 0, 1 );
+    Scene.setFrame( 0 );
+	Scene.setDefaultKeyInterpolationType( DzProperty.InterpLinear );
+};
+
+/*********************************************************************/
+// Function to load the clothing layers of choice into the scene
+DthAutoToolExporter.prototype.loadMorphs = function() {
+    print( "Loading morphs layers for \"%1\"".arg( this.exportableName ) );
+
+    if( !this._oPrimaryFigure ) {
+        throw new Error( "Character not loaded yet - primary figure not found" );
+    }
+
+    DzHelpers.ResizePlayRange( 0, 1 );
+    Scene.setFrame( 0 );
+    Scene.setDefaultKeyInterpolationType( DzProperty.InterpLinear );
+    // memorize figure at frame zero - the rest-pose, so we can restore it on new frames
+    DzHelpers.GetAction( "Memorize Figure" ).trigger();
+    var oRestoreFigureAction = DzHelpers.GetAction(  "Restore Figure" );
+
+    var oContentMgr = App.getContentMgr();
+
+    var nPreviousEndFrame = 0;
+    for( var c=0; c<this._aMorphsAssets.length; c+=1 ) {
+        if( c > 0 ) {
+            nPreviousEndFrame = DzHelpers.GetPlayRangeEndFrame();
+            var nNextAssetStartFrame = nPreviousEndFrame + 1;
+            DzHelpers.ResizePlayRange( 0, nNextAssetStartFrame );
+            Scene.setFrame( nNextAssetStartFrame );
+            oRestoreFigureAction.trigger();
+        }
+
+        var oMorphAsset = this._aMorphsAssets[ c ];
+        print( "Loading character asset: %1".arg( oMorphAsset.assetName ) );
+        function callback() {
+            oContentMgr.loadAsset( oMorphAsset, true );
+        }
+        // In DTH workflow, morphs are exported as animation timeline frames (e.g. JCM, facial expr.,...)
+        this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.LoadAnimation, callback, false, null );
+    }
+
+    // jump back to start after all assets loaded
+    Scene.setFrame( 0 );
+};
+
+/*********************************************************************/
+// Function to check if exportable contains clothing layer group with given name
+DthAutoToolExporter.prototype.loadClothing = function( sClothing ) {
+    print( "Loading clothing layers for \"%1\"".arg( this.exportableName ) );
+
+    if( !this._oPrimaryFigure ) {
+        throw new Error( "Character not loaded yet - primary figure not found" );
+    }
+
+    Assert.NotNullOrEmpty( sClothing );
+    if( !this._mClothingAssets.has( sClothing ) ) {
+        throw new Error( "Clothing assets not found: %1".arg( sClothing ) );
+    }
+    var aClothingAssets = this._mClothingAssets.get( sClothing );
+
+    var oContentMgr = App.getContentMgr();
+
+    for( var c=0; c<aClothingAssets.length; c+=1 ) {
+        var oClothingAsset = aClothingAssets[ c ];
+        print( "Loading clothing asset: %1".arg( oClothingAsset.assetName ) );
+        function callback() {
+            oContentMgr.loadAsset( oClothingAsset, true );
+        }
+        this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.LoadClothing, callback, false, null );
+    }
+};
+
+/*********************************************************************/
+// Prepare all subdivision levels to be ready for DTH workflow
+DthAutoToolExporter.prototype.setupSubdivisionLevels = function() {
+    if( !this._oPrimaryFigure ) {
+        throw new Error( "Character not loaded yet - primary figure not found" );
+    }
+
+    var aPrimaryFigureNodes = this._oPrimaryFigure.getNodeChildren( true ); // true: gets all nodes recursively
+	aPrimaryFigureNodes.unshift( this._oPrimaryFigure ); // attach also primary figure itself at the beginning
+
+    var nSubDNodesCount = 0;
+
+    for( var j = 0; j<aPrimaryFigureNodes.length; j+=1) {
+        // we are only interested in nodes with objects attached
+        var oPrimaryFigureNodeObject = aPrimaryFigureNodes[ j ].getObject();
+        if ( oPrimaryFigureNodeObject ) {
+            for( var k = 0; k<oPrimaryFigureNodeObject.getNumShapes(); k+=1 ) {
+                var oPrimaryFigureShape = oPrimaryFigureNodeObject.getShape( k );
+                var bHasSubDProperty = false;
+
+                // setup SubDIALevel first as it emits signals for SubDRenderLevel
+                var oPropSubDLevel = oPrimaryFigureShape.findProperty( "SubDIALevel" );
+                if( oPropSubDLevel ) {
+                    bHasSubDProperty = true;
+                    oPropSubDLevel.setValue( 1 );
+                }
+
+                var oPropRenderSubDLevel= oPrimaryFigureShape.findProperty( "SubDRenderLevel" );
+                if( oPropRenderSubDLevel ) {
+                    bHasSubDProperty = true;
+                    // NOTE: from some reason, "SubDRenderLevel" setValue sets the actual
+                    //   integer value to the parameter + 1, therefore passing 0 value
+                    oPropRenderSubDLevel.setValue( 0 );
+                }
+
+                if ( bHasSubDProperty ) {
+                    nSubDNodesCount += 1;
+                }
+            }
+        }
+    }
+
+    return nSubDNodesCount;
+};
+
+/*********************************************************************/
+// Copy all exports to desired output dir
+DthAutoToolExporter.prototype.copyResult = function( sExportableName ) {
+    print( "Copying results for \"%1\" as \"%2\"".arg( this.exportableName ).arg( sExportableName ) );
+
+    var aAbcFiles = this._oExportSettings.saganAlembicExportDir.getFilesFromDir( [ "*.abc" ], true );
+    if( !aAbcFiles || aAbcFiles.length !== 1 ) {
+        throw new Error( "Expected exactly one *.abc file in: %1".arg( this._oExportSettings.saganAlembicExportDirAbsPath ) )
+    }
+    var oAbcFileInfo = new DzFileInfo( aAbcFiles[ 0 ] );
+
+    var aDtuFiles = this._oExportSettings.dazToMayaExportDir.getFilesFromDir( [ "*.dtu" ], true );
+    if( !aDtuFiles || aDtuFiles.length !== 1 ) {
+        throw new Error( "Expected exactly one *.dtu file in: %1".arg( this._oExportSettings.dazToMayaExportDirAbsPath ) )
+    }
+    var oDtuFileInfo = new DzFileInfo( aDtuFiles[ 0 ] );
+
+    var sExpectedFbxFileName = oDtuFileInfo.completeBaseName();
+    var aFbxFiles = this._oExportSettings.dazToMayaExportDir.getFilesFromDir( [ "*.fbx" ], true );
+    var oFbxFileInfo = null;
+    if( !aDtuFiles ) {
+        throw new Error( "No *.fbx files found in: %1".arg( this._oExportSettings.dazToMayaExportDirAbsPath ) )
+    } else {
+        for(var i=0; i<aFbxFiles.length; i+=1 ) {
+            var oFileInfo = new DzFileInfo( aFbxFiles[ i ] );
+            if( oFileInfo.fileName().indexOf( "%1.fbx".arg( sExpectedFbxFileName ) ) >= 0 ) {
+                oFbxFileInfo = oFileInfo;
+                break;
+            }
+        }
+    }
+
+    if( !oFbxFileInfo ) {
+        throw new Error( "File %1.fbx not found in: %2".arg( sExpectedFbxFileName ).arg( this._oExportSettings.dazToMayaExportDirAbsPath ) );
+    }
+
+    if( !this._oExportSettings.defaultExportDir.copy( oAbcFileInfo.canonicalFilePath(), "%1.abc".arg( sExportableName ) ) ) {
+        throw new Error( "Failed to copy file \"%1\" to the output directory".arg( oAbcFileInfo.fileName() ) );
+    }
+    if( !this._oExportSettings.defaultExportDir.copy( oDtuFileInfo.canonicalFilePath(), "%1.dtu".arg( sExportableName ) ) ) {
+        throw new Error( "Failed to copy file \"%1\" to the output directory".arg( oDtuFileInfo.fileName() ) );
+    }
+    if( !this._oExportSettings.defaultExportDir.copy( oFbxFileInfo.canonicalFilePath(), "%1.fbx".arg( sExportableName ) ) ) {
+        throw new Error( "Failed to copy file \"%1\" to the output directory".arg( oFbxFileInfo.fileName() ) );
+    }
+};
+
+/*********************************************************************/
+// Prepares scene for fresh new setup
+DthAutoToolExporter.prototype.prepareScene = function() {
+    print( "Prepraing scene for \"%1\"".arg( this.exportableName ) );
+    Scene.clear();
+}
+
+/*********************************************************************/
+// Function to export loaded assets
+DthAutoToolExporter.prototype.startExport = function( sClothing ) {
+    print( "Exporting \"%1\"".arg( this.exportableName ) );
+
+    var nSubDNodesCount = this.setupSubdivisionLevels();
+
+    Scene.setFrame( 0 );
+    var oSaganAlembicExporterAction = DzHelpers.GetAction( "Sagan Alembic Exporter v3" );
+    function fSaganAlembicExportCallback() {
+        oSaganAlembicExporterAction.trigger();
+    }
+    var mSaganAlembicExporterParams = new OrderedKeyValueSet();
+
+    mSaganAlembicExporterParams.add( DthAutoToolHandler.CmdParams.SaganAlembicExporterOutputPath, this._oExportSettings.saganAlembicExportDirAbsPath );
+    mSaganAlembicExporterParams.add( DthAutoToolHandler.CmdParams.SaganAlembicExporterEndFrame, DzHelpers.GetPlayRangeEndFrame() );
+    this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportSaganAlembicV3, fSaganAlembicExportCallback, false, mSaganAlembicExporterParams );
+
+    var oSendToMayaAction = DzHelpers.GetAction( "Send to Maya" );
+    function fSendToMayaExportCallback() {
+        oSendToMayaAction.trigger();
+    }
+    var mSendToMayaParams = new OrderedKeyValueSet();
+    mSendToMayaParams.add( DthAutoToolHandler.CmdParams.ExportAssetName, this._oExportPlan.name );
+    mSendToMayaParams.add( DthAutoToolHandler.CmdParams.SubDivisionShapesCount, nSubDNodesCount );
+    this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportDazToMayaFbx, fSendToMayaExportCallback, false, mSendToMayaParams );
+};

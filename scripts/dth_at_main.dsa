@@ -1,0 +1,196 @@
+// DAZ Studio version 4.23.0.1 filetype DAZ Script
+
+/**********************************************************************
+
+	This script starts the tools for DTH auto-export process.
+	Behavior and configuration of the script are loaded from JSON.
+	Make sure all dependencies are properly installed and configured before running.
+
+**********************************************************************/
+
+/*********************************************************************/
+// String : A function for retrieving a translation if one exists
+function text( sText )
+{
+	// If the version of the application supports qsTr()
+	if( typeof( qsTr ) != "undefined" ){
+		// Return the translated (if any) text
+		return qsTr( sText );
+	}
+
+	// Return the original text
+	return sText;
+};
+
+/*********************************************************************/
+// void : A function that gets the path of the current script
+function getScriptPath()
+{
+	// Get the filename of the running script
+	var sFileName = getScriptFileName();
+
+	// Create a file info object
+	var oFileInfo = new DzFileInfo( sFileName );
+
+	// Declare a working variable
+	var sPath;
+
+	// If the version of the application provides the method
+	if( typeof( oFileInfo.canonicalPath ) == "function" ){
+		// Get the canonical path from the file
+		sPath = oFileInfo.canonicalPath(); //requires 4.9.3.29 or newer
+	// If the method we prefer is not available
+	} else {
+		// Use the fallback to get the (absolute) path
+		sPath = oFileInfo.path();
+	}
+
+	// Clean up; do not leak memory
+	oFileInfo.deleteLater();
+
+	// Return the path
+	return sPath;
+};
+
+/*********************************************************************/
+// void : Prints arguments passed to the script in readable form
+function printModuleHeader ( aArgs ) {
+	var vArg;
+	var sType;
+
+	// Initialize
+	var aLines = new Array( aArgs.length );
+
+	// Iterate over the arguments passed to the script
+	for( var i = 0, nArgs = aArgs.length; i < nArgs; i += 1 ){
+		// Get the 'current' argument
+		vArg = aArgs[ i ];
+
+		// Get the 'current' type
+		sType = typeof( vArg );
+
+		// Stringify based on the type of the argument
+		switch( sType ){
+			case "object":
+				aLines[ i ] = String("[%1]: %2")
+						.arg( sType )
+						.arg( JSON.stringify( vArg ) );
+				break;
+			default:
+				aLines[ i ] = String("[%1]: %2")
+						.arg( sType )
+						.arg( vArg );
+				break;
+		}
+	}
+
+	print ( "===================================================" );
+	print ( "================ Module Arguments =================" );
+	print ( "===================================================" );
+
+	for ( var i = 0, nArgs = aArgs.length; i < nArgs; i += 1 ){
+		print( aLines[i] );
+	}
+}
+
+// Define a function to load and execute external scripts
+
+
+/*********************************************************************/
+// DzScript : A function that retrieves a script from the file
+function require( sName )
+{
+	var sPath = String( "%1/%2.dsa" ).arg( getScriptPath() ).arg( sName );
+
+	var sCurrentScript = getScriptFileName();
+
+	// Declare working variables
+	var sTitle, sMessage;
+
+	// Define common strings
+	var sButton = text( "&OK" );
+
+	// Create a script object
+	var oScript = new DzScript();
+
+	// Create a file info object
+	var oFileInfo = new DzFileInfo( sPath );
+	// Get the file extension
+	var sExtension = oFileInfo.extension();
+
+	// If the path does not have a file extension, attempt to find the
+	// script with a supported extension; doing it this way, we can debug
+	// with an ascii file and distribute a binary (encrypted) file with
+	// the same name... without having to update the contents of the script
+	// or manually handle the file extensions; requires 3.0.1.5 or newer
+	var sScriptPath = sExtension.isEmpty() ?
+			oScript.getScriptFile( sPath ) : sPath;
+
+	// Clean up; do not leak memory
+	oFileInfo.deleteLater();
+
+	// If a script is found
+	if( !sScriptPath.isEmpty() ){
+		// If the script loads
+		if( !oScript.loadFromFile( sScriptPath ) ) {
+			// Define text variables for the message
+			sTitle = text( "Read Error" );
+			sMessage = text( "The '%1' file could not be loaded." ).arg( sScriptPath );
+			// Inform the user
+			//MessageBox.information( sMessage, sTitle, sButton );
+			throw new Error( sMessage );
+		}
+	// If a script is not found
+	} else {
+		// Define text variables for the message
+		//sTitle = text( "File Not Found" );
+		sMessage = text( "A '%1.ds(a|b|e)' file could not be found." ).arg( sPath );
+		// Inform the user
+		//MessageBox.information( sMessage, sTitle, sButton );
+		throw new Error( sMessage );
+	}
+
+	return oScript;
+}
+
+/*********************************************************************/
+// String : A function that retrieves a script code from the file
+function include( sName )
+{
+	var oScript = require( sName );
+	if( oScript && oScript.checkSyntax() ) {
+		return oScript.getCode();
+	}
+	sMessage = text( "Script could not be included: %1." ).arg( sName );
+	// Inform the user
+	//MessageBox.information( sMessage, sTitle, sButton );
+	throw new Error( sMessage );
+}
+
+/*********************************************************************/
+// void : A function that executes a script and passes arguments to it
+function module( sName, aScriptArgs )
+{
+	function separator() {
+		print ( "..." );
+	}
+
+	var oScript = require( sName );
+
+	separator()
+	var execModuleLine = String( "Executing module [%1]" ).arg( sName );
+	print ( execModuleLine );
+	separator();
+
+	oScript.execute( aScriptArgs );
+
+	separator();
+	execModuleLine = String( "Finished executing module [%1]" ).arg( sName );
+	print ( execModuleLine );
+	separator();
+};
+
+(function(){
+	//executeScriptWithArgs( ..., [ ... ] );
+	module( "dth_at_project_loader", [] );
+})();

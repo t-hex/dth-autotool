@@ -1,0 +1,56 @@
+eval(include( "dth_at_generic_helpers" ));
+
+/*********************************************************************/
+// DthAutoToolLibraryBrowser constructor
+function DthAutoToolLibraryBrowser() {}
+
+/*********************************************************************/
+// Function to lookup all assets matching the search pattern
+DthAutoToolLibraryBrowser.prototype.search = function( sNamePattern ) {
+    Assert.NotNullOrEmpty( sNamePattern );
+    var sNamePatternLower = sNamePattern.toLowerCase();
+
+    var oSearchResult;
+    var oAsset = null;
+
+    function OnSearchStateChanged( csState ) {
+        var aFoundAssets = oSearchResult.getAssets();
+        for( var i=0; i<aFoundAssets.length; i+=1 ) {
+            if( aFoundAssets[ i ].assetName.toLowerCase() === sNamePatternLower
+                || aFoundAssets[ i ].displayName.toLowerCase() === sNamePatternLower
+                || aFoundAssets[ i ].originalFilename.toLowerCase() === sNamePatternLower
+                || aFoundAssets[ i ].productName.toLowerCase() === sNamePatternLower
+                || aFoundAssets[ i ].getRelativeFilePath().toLowerCase() === sNamePatternLower ) {
+                    oAsset = aFoundAssets[ i ];
+                    break;
+            }
+        }
+        // if we found asset -or- if searching is finished
+        if( oAsset || csState !== DzTopLevelAssetContainer.csBusy ) {
+            oSearchResult.stateChanged.disconnect( OnSearchStateChanged );
+            finishBackgroundProgress();
+        }
+    }
+
+    try {
+        startBackgroundProgress( sNamePattern, true, true );
+
+        var oAssetMgr = App.getAssetMgr();
+
+        oAssetMgr.setMaxFileSearchResultSize( Number.MAX_VALUE );
+        oSearchResult = oAssetMgr.searchForAssets ( sNamePattern, [], [], [], oAssetMgr.NameSort );
+        oSearchResult.stateChanged.connect( OnSearchStateChanged );
+
+        while( backgroundProgressIsActive() ) { sleep( 500 ); /*processEvents();*/ }
+    } catch( err ) {
+        // Stop background process - otherwise in case of error, there'll
+        // be problem to start the script again due to hanging background process.
+        // In these cases restart Daz Studio.
+        if( backgroundProgressIsActive() ) {
+            finishBackgroundProgress();
+            oSearchResult.stateChanged.disconnect( OnSearchStateChanged );
+        }
+    }
+
+    return oAsset;
+};
