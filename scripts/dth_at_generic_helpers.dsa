@@ -1,0 +1,176 @@
+/*********************************************************************/
+// Static type validations and conversions
+var Assert = {
+    NotNullOrEmpty: function( value, err ) {
+        if ( value == null || value === "" ) {
+            throw new Error( err || "String must not be null or empty." );
+        }
+    },
+
+    IsNumber: function( value, err ) {
+        if ( typeof value !== "number" || isNaN( value ) ) {
+            throw new Error(err || "Value must be a valid number.");
+        }
+        return true;
+    },
+
+    IsArray: function( value, err ) {
+	    if ( !Array.isArray( value ) ) {
+	        throw new Error( err || "Value must be an array." );
+	    }
+	},
+
+    IsFunction: function( value, err ) {
+	    if ( typeof value !== "function" ) {
+	        throw new Error( err || "Value must be a function." );
+	    }
+	},
+
+    NotEmptyArray: function( value, err ) {
+        if ( !Array.isArray( value ) || !(value.length > 0) ) {
+	        throw new Error( err || "Value must be a non empty array." );
+	    }
+	},
+};
+
+var Cast = {
+	AsNotNullOrEmpty: function( value, err ) {
+        Assert.NotNullOrEmpty( value, err );
+        return value;
+    },
+
+    AsNumber: function( value, err ) {
+        Assert.IsNumber( value, err );
+        return value;
+    },
+
+    AsArray: function( value, err ) {
+	    Assert.IsArray( value, err );
+	    return value;
+	},
+
+    AsNotEmptyArray: function( value, err ) {
+	    Assert.NotEmptyArray( value, err );
+	    return value;
+	},
+};
+
+/*********************************************************************/
+// Conversion helpers
+var Convert = {
+    CapitalizeFirstLetter: function( value ) {
+        var sValue = Cast.AsNotNullOrEmpty( value );
+        var sCapitalized = sValue.charAt( 0 ).toUpperCase();
+        if( sValue.length > 1 ) {
+            sCapitalized = sCapitalized + sValue.slice( 1 );
+        }
+        return sCapitalized;
+    }
+}
+
+/*********************************************************************/
+// Custom key list implementation
+function OrderedKeyValueSet() {
+    this._store = {};
+    this._orderedKeys = [];
+}
+
+OrderedKeyValueSet.prototype.add = function( key, value, position ) {
+    if ( this.has( key ) ) {
+        throw new Error( "Unable to add duplicate key: %1".arg( key ) );
+    }
+    if ( position )
+    {
+        if ( position === "front" ) {
+            this._orderedKeys.unshift( key );
+        } else if( position === "back" ) {
+            this._orderedKeys.push( key );
+        } else {
+            throw new Error( "Incorrect position specifier" );
+        }
+    } else {
+        this._orderedKeys.push( key );
+    }
+    this._store[ key ] = value;
+};
+
+OrderedKeyValueSet.prototype.union = function( keyValueSet, position ) {
+    if ( !(keyValueSet instanceof OrderedKeyValueSet) ) {
+        throw new Error( "Unexpected object type to union with" );
+    }
+
+    var aKeys = keyValueSet.keys();
+
+    if( position ) {
+        if ( position === "front" ) {
+            aKeys = aKeys.reverse();
+        } else if( position === "back" ) {
+            aKeys = aKeys;
+        } else {
+            throw new Error( "Incorrect position specifier" );
+        }
+    }
+
+    for( var i = 0; i<aKeys.length; i+=1 ) {
+        var key = aKeys[ i ];
+        this.add( key, keyValueSet.get( key ), position );
+    }
+};
+
+OrderedKeyValueSet.prototype.override = function( keyValueSet, ignoreMissing ) {
+    if ( !(keyValueSet instanceof OrderedKeyValueSet) ) {
+        throw new Error( "Unexpected object type to override with" );
+    }
+
+    var aKeys = keyValueSet.keys();
+
+    for( var i = 0; i<aKeys.length; i+=1 ) {
+        var key = aKeys[ i ];
+        if( this.has( key ) ) {
+            this._store[ key ] = keyValueSet.get( key )
+        } else if( ignoreMissing !== true ) {
+            throw new Error( "Missing key to replace %1".arg( key ) );
+        }
+    }
+};
+
+OrderedKeyValueSet.prototype.get = function( key ) {
+    return this._store[ key ] || null;
+};
+
+OrderedKeyValueSet.prototype.has = function( key ) {
+    return this._store.hasOwnProperty( key );
+};
+
+OrderedKeyValueSet.prototype.remove = function( key ) {
+    this._orderedKeys = this._orderedKeys.filter( function () {
+       return v !== key;
+    } );
+    delete this._store[ key ];
+};
+
+OrderedKeyValueSet.prototype.replace = function( key, value ) {
+    if( !this.has(key) ) {
+        throw new Error( "Cannot replace unexisting key" );
+    }
+    this._store[ key ] = value;
+};
+
+OrderedKeyValueSet.prototype.clear = function( key ) {
+    for( var i = 0; i<this._orderedKeys.length; i+=1 ) {
+        delete this._store[ _orderedKeys[ i ] ];
+    }
+    this._store = {};
+    this._orderedKeys = [];
+};
+
+OrderedKeyValueSet.prototype.keys = function () {
+    return this._orderedKeys.slice();
+};
+
+OrderedKeyValueSet.prototype.values = function () {
+    var s = this._store;
+    return this._orderedKeys.map( function ( k ) {
+        return s[ k ];
+    } );
+};

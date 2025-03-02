@@ -1,0 +1,55 @@
+eval(include( "dth_at_exporter" ));
+
+/*********************************************************************/
+// Module execution code block
+(function(){
+    var oDthAutoToolConfig = new DthAutoToolConfiguration( "dth_at_config.json" );
+
+    if( oDthAutoToolConfig.editMode.isEnabled ) {
+        print( "Edit mode enabled. Loading exportable: \"%1\" without triggering export".arg( oDthAutoToolConfig.editMode.exportableName ) );
+
+        var oExportPlan = oDthAutoToolConfig.build( oDthAutoToolConfig.editMode.exportableName );
+        var oDthAutoToolExporter = new DthAutoToolExporter( oExportPlan, oDthAutoToolConfig.dthAutoToolConfig, oDthAutoToolConfig.exportSettings );
+
+        oDthAutoToolExporter.prepareScene();
+        oDthAutoToolExporter.loadCharacter();
+        if( oDthAutoToolConfig.editMode.withClothing )
+        {
+            oDthAutoToolExporter.loadClothing( oDthAutoToolConfig.editMode.clothingName );
+        }
+        oDthAutoToolExporter.loadMorphs();
+    } else {
+        var aExportableKeys = oDthAutoToolConfig.exportables.keys();
+        for( var i=0; i<aExportableKeys.length; i+=1 )
+        {
+            print( "Loading exportable: \"%1\"".arg( aExportableKeys[ i ] ) );
+
+            var oExportable = oDthAutoToolConfig.exportables.get( aExportableKeys[ i ] );
+            var oExportPlan = oDthAutoToolConfig.build( oExportable.name );
+            var sOutputName = oExportPlan.name
+
+            var oDthAutoToolExporter = new DthAutoToolExporter( oExportPlan, oDthAutoToolConfig.dthAutoToolConfig, oDthAutoToolConfig.exportSettings );
+
+            // export pure character without clothings first
+            oDthAutoToolExporter.prepareScene();
+            oDthAutoToolExporter.loadCharacter();
+            oDthAutoToolExporter.loadMorphs();
+            oDthAutoToolExporter.startExport();
+            oDthAutoToolExporter.copyResult( sOutputName );
+
+            // if clothings defined export character with each clothing
+            var aClothingKeys = oDthAutoToolExporter.clothings;
+            if( aClothingKeys.length > 0 ) {
+                for( var j=0; j<aClothingKeys.length; j+=1 ) {
+                    oDthAutoToolExporter.prepareScene();
+                    oDthAutoToolExporter.loadCharacter();
+                    oDthAutoToolExporter.loadClothing( aClothingKeys[ j ] );
+                    oDthAutoToolExporter.loadMorphs();
+
+                    oDthAutoToolExporter.startExport();
+                    oDthAutoToolExporter.copyResult( "%1 - %2".arg( sOutputName ).arg( aClothingKeys[ j ] ) );
+                }
+            }
+        }
+    }
+})();

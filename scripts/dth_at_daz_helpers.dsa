@@ -1,0 +1,42 @@
+/*********************************************************************/
+// Daz Studio helpers/extensions
+var DzHelpers = {
+    GetAction: function( actionText ) {
+		var oActionMgr = MainWindow.getActionMgr();
+
+		var oAction;
+		var i = 0;
+		for( i = 0; i<oActionMgr.getNumActions(); i+=1 ) {
+			var oAction = oActionMgr.getAction( i );
+			if( oAction.simpleText === actionText ) {
+				break;
+			}
+		}
+		if ( !oAction || i === oActionMgr.getNumActions() ) {
+			throw new Error( "Failed to find DAZ action: \"%1\"".arg( actionText ) );
+		}
+
+		return oAction;
+	},
+
+	ResizePlayRange: function( start, end ) {
+		var timestep = Scene.getTimeStep();
+		var newPlayRange = new DzTimeRange( start*timestep, end*timestep );
+		Scene.setPlayRange( newPlayRange );
+	},
+
+	GetPlayRangeEndFrame: function() {
+		return Scene.getPlayRange().end / Scene.getTimeStep();
+	},
+
+	ToNativePath: function( sPath, bEscapeSeparator ) {
+		if( App.platform() === App.Windows ) {
+			var separator = "\\";
+			if( bEscapeSeparator ) {
+				separator = "\\%1".arg( separator );
+			}
+			return sPath.replace( new RegExp( "/", "g" ), separator );
+		}
+		return sPath;
+	}
+};

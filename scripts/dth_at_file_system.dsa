@@ -1,0 +1,167 @@
+eval(include( "dth_at_generic_helpers" ));
+
+function DsFileSystem() { };
+DsFileSystem.superclass = Object;
+
+/*********************************************************************/
+// Array<String|DzDir> : Method for collecting an array of directory objects
+DsFileSystem.prototype.getDirectories = function( oDir, regxFilter, nFilter, nSort, sType, bRecurse )
+{
+    var sAbsPath;
+    var aDirs = oDir.entryList( regxFilter, nFilter, nSort );
+
+    for( var i = 0, nDirs = aDirs.length; i < nDirs; i += 1 ) {
+        // Get the absolute path of the 'current' directory
+        sAbsPath = String( "%1/%2" ).arg( oDir.absPath() ).arg( aDirs[ i ] );
+        // Based on the type requested
+        switch( sType ){
+            default:
+            case "String":
+                aDirs[ i ] = sAbsPath;
+                if( bRecurse ){
+                    aDirs = aDirs.concat( this.getSubDirectories( new DzDir( sAbsPath ), regxFilter, nFilter, nSort, sType ) );
+                }
+            break;
+        case "DzDir":
+            aDirs[ i ] = new DzDir( sAbsPath );
+            if( bRecurse ){
+                aDirs = aDirs.concat( this.getSubDirectories( aDirs[ i ],
+                regxFilter, nFilter, nSort, sType ) );
+            }
+            break;
+        }
+    }
+
+    return aDirs;
+};
+
+/*********************************************************************/
+// Array<String|DzDir> : Method for recursively collecting an array of directory objects
+DsFileSystem.prototype.getSubDirectories = function( oDir, regxFilter, nFilter, nSort, sType )
+{
+	var aSubDirs = [];
+	// Get the immediate child directories
+	var aDirs = this.getDirectories( oDir, regxFilter, nFilter, nSort, sType, true );
+
+	for( var i = 0, nDirs = aDirs.length; i < nDirs; i += 1 ){
+		// Based on the type requested
+		switch( sType ){
+			default:
+			case "String":
+				aSubDirs = aDirs.concat( this.getSubDirectories( new DzDir( aDirs[ i ] ),
+					regxFilter, nFilter, nSort, sType ) );
+				break;
+			case "DzDir":
+				aSubDirs = aDirs.concat( this.getSubDirectories( aDirs[ i ],
+					regxFilter, nFilter, nSort, sType, true ) );
+				break;
+		}
+	}
+
+	return aSubDirs;
+};
+
+/*********************************************************************/
+// Array<String|DzFileInfo|DzFile> : Method for collecting an array of files
+DsFileSystem.prototype.getFiles = function( oDir, regxFilter, nFilter, nSort, sType )
+{
+	var sAbsFilePath;
+	var aFiles = oDir.entryList( regxFilter, nFilter, nSort );
+
+	for( var i = 0, nFiles = aFiles.length; i < nFiles; i += 1 ){
+		// Get the absolute path of the 'current' file
+		sAbsFilePath = oDir.absFilePath( aFiles[ i ] );
+		// Based on the type requested
+		switch( sType ){
+			default:
+			case "String":
+				aFiles[ i ] = sAbsFilePath;
+				break;
+			case "DzFileInfo":
+				aFiles[ i ] = new DzFileInfo( sAbsFilePath );
+				break;
+			case "DzFile":
+				aFiles[ i ] = new DzFile( sAbsFilePath );
+				break;
+		}
+	}
+
+	return aFiles;
+};
+
+/*********************************************************************/
+// Array<String|DzDir> : Method for retrieving a list of directories
+DsFileSystem.prototype.getDirectoryList = function( sPath, sFilter, sType, bRecurse, bRelative )
+{
+	var aDirs = [];
+	var oBaseDir = new DzDir( sPath );
+
+	if( !oBaseDir.exists() ){
+		oBaseDir.deleteLater();
+		return aDirs;
+	}
+
+	var aDirs = this.getDirectories( oBaseDir, sFilter,
+		DzDir.Dirs | DzDir.NoDotAndDotDot, DzDir.Name, sType, bRecurse );
+	oBaseDir.deleteLater();
+
+	// If we do not want relative paths
+	if( !bRelative ){
+		return aDirs;
+	}
+
+	var sAbsPath, sRelPath;
+	var oDir;
+
+	for( var i = 0, nDirs = aDirs.length; i < nDirs; i += 1 ){
+		// Based on the type requested
+		switch( sType ){
+			default:
+			case "String":
+				sAbsPath = aDirs[ i ];
+				sRelPath = sAbsPath.substring( sPath.length );
+				aDirs[ i ] = sRelPath;
+				break;
+			case "DzDir":
+				oDir = aDirs[ i ];
+				sAbsPath = oDir.path();
+				sRelPath = sAbsPath.substring( sPath.length );
+				oDir.setPath( sRelPath );
+				aDirs[ i ] = oDir;
+				break;
+		}
+	}
+
+	return aDirs;
+};
+
+/*********************************************************************/
+// Array<String|DzFileInfo|DzFile> : Method for retrieving a list of files
+DsFileSystem.prototype.getFileList = function( sPath, sFilter, sType, bRecurse )
+{
+	var oBaseDir = new DzDir( sPath );
+	if( !oBaseDir.exists() ){
+		oBaseDir.deleteLater();
+		return [];
+	}
+
+	// Get the files from the specified directory
+	var aFiles = this.getFiles( oBaseDir, sFilter, DzDir.Files, DzDir.Name, sType );
+	oBaseDir.deleteLater();
+
+	if( bRecurse ){
+		var oDir;
+		var aDirs = this.getDirectoryList( sPath, "*", "DzDir", bRecurse );
+
+		for( var i = 0, nDirs = aDirs.length; i < nDirs; i += 1 ){
+			// Get the 'current' directory
+			oDir = aDirs[ i ];
+			// Append the files from the 'current' directory to the output
+			aFiles = aFiles.concat(
+				this.getFiles( oDir, sFilter, DzDir.Files, DzDir.Name, sType ) );
+			oDir.deleteLater();
+		}
+	}
+    
+	return aFiles;
+};
