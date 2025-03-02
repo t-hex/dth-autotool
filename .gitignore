@@ -24,6 +24,9 @@ go.work.sum
 # env file
 .env
 
-# exlude .fleet & .idea folders
+# exclude .fleet & .idea folders
 .fleet/
 .idea/
+
+# build/output folder
+build/
