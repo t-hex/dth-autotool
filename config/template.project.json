@@ -1,0 +1,28 @@
+{
+    "version": "0.1",
+    "edit_mode": {
+        "is_enabled": false,
+        "exportable_name": "",
+        "clothing_name": ""
+    },
+    "export_settings": {
+        "tags": ["not-yet-supported"],
+        "sagan_alembic_export_directory": "",
+        "daz_to_maya_export_directory": "",
+        "default_output_directory": ""
+    },
+    "dth_autotool": {
+        "executable_path": "./dthautotool.exe",
+        "executable_config_path": "./config.json",
+        "alembic_exporter_template_config_path": "./template.config.sagan"
+    },
+    "templates": [
+        {
+            "name": "default",
+            "character": [ { "name": "?", "layers": ["?.duf"] } ],
+            "clothing": [ { "name": "?", "layers": ["?.duf"] } ],
+            "morphs": [ { "name": "DTH defaults", "layers": ["?.duf"] } ]
+        }
+    ],
+    "exportables": [ { "name": "?", "templates": ["default"] } ]
+}

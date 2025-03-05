@@ -1,0 +1,12 @@
+[General]
+base_directory=C:
+start_frame=0
+end_frame=0
+ignore_invisible_objects=true
+write_texture_script=false
+scale_for_meters=false
+scale_for_centimeters=true
+overwrite_output=true
+object_naming=%N
+ignore_hidden_faces=true
+write_armature_empties=true

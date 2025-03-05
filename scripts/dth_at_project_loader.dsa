@@ -3,7 +3,7 @@ eval(include( "dth_at_exporter" ));
 /*********************************************************************/
 // Module execution code block
 (function(){
-    var oDthAutoToolConfig = new DthAutoToolConfiguration( "dth_at_config.json" );
+    var oDthAutoToolConfig = new DthAutoToolConfiguration( "project.json" );
 
     if( oDthAutoToolConfig.editMode.isEnabled ) {
         print( "Edit mode enabled. Loading exportable: \"%1\" without triggering export".arg( oDthAutoToolConfig.editMode.exportableName ) );
