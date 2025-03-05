@@ -191,6 +191,5 @@ function module( sName, aScriptArgs )
 };
 
 (function(){
-	//executeScriptWithArgs( ..., [ ... ] );
 	module( "dth_at_project_loader", [] );
 })();

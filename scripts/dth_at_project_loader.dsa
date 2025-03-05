@@ -2,8 +2,16 @@ eval(include( "dth_at_exporter" ));
 
 /*********************************************************************/
 // Module execution code block
-(function(){
-    var oDthAutoToolConfig = new DthAutoToolConfiguration( "project.json" );
+(function( aArgs ){
+    var sConfigFilePath = "./project.config.json"
+    if( aArgs ) {
+        Assert.IsArray( aArgs );
+        if( aArgs.length > 0 ) {
+            sConfigFilePath = Cast.AsNotNullOrEmpty( aArgs[ 0 ] );
+        }
+    }
+
+    var oDthAutoToolConfig = new DthAutoToolConfiguration( sConfigFilePath );
 
     if( oDthAutoToolConfig.editMode.isEnabled ) {
         print( "Edit mode enabled. Loading exportable: \"%1\" without triggering export".arg( oDthAutoToolConfig.editMode.exportableName ) );
