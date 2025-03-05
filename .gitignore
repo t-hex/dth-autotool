@@ -30,3 +30,6 @@ go.work.sum
 
 # build/output folder
 build/
+
+# development configurations
+scripts/project.config.json
