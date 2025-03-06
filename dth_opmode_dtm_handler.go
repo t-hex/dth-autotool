@@ -142,7 +142,7 @@ func (o DazToMayaExportDialogHandler) StepOpenSubdivisionsDialog(
 			}
 		}
 
-		err := robotgo.KeyTap(robotgo.Enter)
+		err := robotgo.KeyTap(robotgo.Space)
 		if err != nil {
 			return err
 		}
@@ -281,7 +281,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptSubdivisionsDialog(
 		if err != nil {
 			return err
 		}
-		err = robotgo.KeyTap(robotgo.Enter)
+		err = robotgo.KeyTap(robotgo.Space)
 		if err != nil {
 			return err
 		}
@@ -324,12 +324,12 @@ func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 	switch method {
 	case HandlingMethodKeySequencing:
 		for range 8 {
-			err := robotgo.KeyTap(robotgo.Tab)
+			err := robotgo.KeyTap(robotgo.Tab, robotgo.Shift)
 			if err != nil {
 				return err
 			}
 		}
-		err := robotgo.KeyTap(robotgo.Enter)
+		err := robotgo.KeyTap(robotgo.Space)
 		if err != nil {
 			return err
 		}
