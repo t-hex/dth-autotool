@@ -1,5 +1,4 @@
 # DTH-AutoTool
----
 Automate export process from DAZ studio for DTH workflow.
 
 :warning: For windows only :warning:
@@ -10,8 +9,24 @@ This repository is still work in progress and mostly reflects my personal workfl
 # Download template app
 If you want to avoid headaches of manual compilation. Pre-compiled application with demo configuration can be downloaded [here](https://e.pcloud.link/publink/show?code=XZMtClZW3QA1kTh8z7LC0shRbvQ1kJcNc8V).
 
+# How it works
+- Prepare your assets upfront and save them as a `*.duf` files. DTH-AutoTool app uses `Asset Manager` API to locate the assets. Your *.duf files are automatically added to DAZ database. Manually copied `*.duf` files to common DAZ directories can be browsed from UI as files but are not part of database automatically (scanning files is not supported in DTH-AutoTool at the moment). The easiest way to index them is to add assets to existing categories or for example create entirely new category (e.g. DTH category from the entire _DazToHue_ folder).
+- In `project.config.json` under `templates` section, list all templates with their `character`, `clothing` and/or `morphs` subsections. None of them is mandatory for template, which means you can split different layers across templates and combine them later in `exportables` section. Every template name must be unique.
+- `character`, `clothing` and/or `morphs` subsections contains _layer groups_. Every _layer group_ must have a globally unique name and contains array of layers (`*duf` files) that logically belongs together (for example, some parts of clothings may exist as separate DAZ assets, but you may want to handle it as a single group/unit - single outfit).
+- `templates` can only be referenced in `exportables`. Exportables are producing real outpus. You can combine several templates together in one exportable and _override_ specific layer groups, _prepend_ or _append_ to them, or completely _replace_ entire `character`, `clothing` or `morphs` sections if needed. This provides higher granularity in setting up specific characters/figures to export.
+
+### Character vs. Clothing vs. Morphs
+- `character` layers are applied first and should define the characters basic look. If you need, you can apply also clothing `*.duf` files but the idea of these layers is their single appliance at the beginning of the pipeline.
+- `clothing` layers are applied after the `character` layers but **always only one clothing** per pipeline run. After one of the clothings is applied, `morphs` layers are loaded.
+- `morphs` layers are loaded after `clothing` and usually should contain timeline JCM frames or morphs to be handled by DTH workflow.
+- Once layers are loaded, export is triggered. Then the process is repeated for each available `clothing`.
+
+### Edit mode
+- If you need to load only the layers without export being triggered, use `edit_mode` configuration section.
+- Set `is_enabled` to `true` and specify `exportable_name` to valid value.
+- If `exportable` has clothing layers, you can also specify `clothing_name` to load.
+
 # How to compile
----
 This project depends on [robotgo](https://github.com/go-vgo/robotgo) and [gocv](https://github.com/vcaesar/gcv) libraries.
 Therefore [OpenCV](https://opencv.org/) bindings needs [opencv](https://opencv.org/) as a prerequisite. OpenCV should be compiled as part of `robotgo` dependency automatically, but see _compilation issues_ section below.
 
