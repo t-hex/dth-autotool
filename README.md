@@ -9,6 +9,11 @@ This repository is still work in progress and mostly reflects my personal workfl
 # Download template app
 If you want to avoid headaches of manual compilation. Pre-compiled application with demo configuration can be downloaded [here](https://e.pcloud.link/publink/show?code=XZMtClZW3QA1kTh8z7LC0shRbvQ1kJcNc8V).
 
+# Install `tesseract` (optional)
+DTH-AutoTool can handle popups using `key-sequencing` or `visual-lookup` methods.
+The latter may optionally benefit from [Tesseract OCR engine](https://github.com/tesseract-ocr/tesseract) installed on your system as command line tool to validate located GUI elements like buttons or labels.
+It is highly recommended to install `tesseract` app when using `visual-lookup` mode. You can disable this feature in `app.config.json` file by setting `screen_search_validation->tesseract_validation->enabled` to `false`.
+
 # How it works
 - Prepare your assets upfront and save them as a `*.duf` files. DTH-AutoTool app uses `Asset Manager` API to locate the assets. Your *.duf files are automatically added to DAZ database. Manually copied `*.duf` files to common DAZ directories can be browsed from UI as files but are not part of database automatically (scanning files is not supported in DTH-AutoTool at the moment). The easiest way to index them is to add assets to existing categories or for example create entirely new category (e.g. DTH category from the entire _DazToHue_ folder).
 - In `project.config.json` under `templates` section, list all templates with their `character`, `clothing` and/or `morphs` subsections. None of them is mandatory for template, which means you can split different layers across templates and combine them later in `exportables` section. Every template name must be unique.
