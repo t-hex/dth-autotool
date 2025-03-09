@@ -389,6 +389,8 @@ DthAutoToolExporter.prototype.setupSubdivisionLevels = function() {
         }
     }
 
+    Scene.update();
+
     return nSubDNodesCount;
 };
 
@@ -453,6 +455,17 @@ DthAutoToolExporter.prototype.startExport = function( sClothing ) {
 
     var nSubDNodesCount = this.setupSubdivisionLevels();
 
+    var oPaneMgr = App.getInterface().getPaneMgr();
+
+    var oViewportPane = oPaneMgr.findPane( "DzViewportMgrPane" );
+    var oScriptPane = oPaneMgr.findPane( "DzScriptPane" );
+
+    if( !oViewportPane ) { throw new Error( "Unable to find viewport pane instance" ); }
+    if( !oScriptPane ) { throw new Error( "Unable to find script pane instance" ); }
+
+    // viewport must be visible in order for sagan alembic exporter to work properly
+    oPaneMgr.showPane( oViewportPane );
+
     Scene.setFrame( 0 );
     var oSaganAlembicExporterAction = DzHelpers.GetAction( "Sagan Alembic Exporter v3" );
     function fSaganAlembicExportCallback() {
@@ -472,4 +485,6 @@ DthAutoToolExporter.prototype.startExport = function( sClothing ) {
     mSendToMayaParams.add( DthAutoToolHandler.CmdParams.ExportAssetName, this._oExportPlan.name );
     mSendToMayaParams.add( DthAutoToolHandler.CmdParams.SubDivisionShapesCount, nSubDNodesCount );
     this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportDazToMayaFbx, fSendToMayaExportCallback, false, mSendToMayaParams );
+
+    oPaneMgr.showPane( oScriptPane );
 };
