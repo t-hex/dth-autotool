@@ -30,5 +30,8 @@
             "morphs": [ { "name": "DTH", "layers": ["G8.1 LINEAR JCM - Base.duf"] } ]
         }
     ],
-    "exportables": [ { "name": "Adam", "templates": ["Default Male"] }, { "name": "Eve", "templates": ["Default Female"] } ]
+    "exportables": [
+        { "name": "Adam", "templates": ["Default Male"] },
+        { "name": "Eve", "templates": ["Default Female"] }
+    ]
 }
