@@ -7,7 +7,7 @@ Automate export process from DAZ studio for DTH workflow.
 This repository is still work in progress and mostly reflects my personal workflow setup. All recommendations and suggestions for improvements are welcomed. You are encouraged to play around with the code and adjust according to your personal requirements.
 
 # Download template app
-If you want to avoid headaches of manual compilation. Pre-compiled application with demo configuration can be downloaded [here](https://e.pcloud.link/publink/show?code=XZMtClZW3QA1kTh8z7LC0shRbvQ1kJcNc8V).
+If you want to avoid headaches of manual compilation. Pre-compiled application with demo configuration can be downloaded [here](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
 
 # Install `tesseract` (optional)
 DTH-AutoTool can handle popups using `key-sequencing` or `visual-lookup` methods.
@@ -65,7 +65,7 @@ For more information on how to compile `robotgo` and `gocv` (OpenCV bindings for
 - [OpenCV official site](https://opencv.org/)
 
 #### Pre-built OpenCV binaries
-You can use 64-bit binaries I already built from [this link](https://e.pcloud.link/publink/show?code=XZHtClZ2V7k51uqqikNlokbNBW0i7mMgwuV).
+You can use 64-bit binaries I already built from [this link](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
 Note that these libraries were built with `-D_GLIBCXX_USE_CXX11_ABI=0` option so when building the DTH-AutoTool project you'll have to set `CGO_CFLAGS` with this option as well to link it properly.
 
 #### Dealing with `robotgo` compilation issues
