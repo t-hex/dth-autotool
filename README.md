@@ -6,8 +6,31 @@ Automate export process from DAZ studio for DTH workflow.
 #### :bangbang: Disclaimer
 This repository is still work in progress and mostly reflects my personal workflow setup. All recommendations and suggestions for improvements are welcomed. You are encouraged to play around with the code and adjust according to your personal requirements.
 
-# Download template app
-If you want to avoid headaches of manual compilation. Pre-compiled application with demo configuration can be downloaded [here](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
+# Download the latest build
+If you want to avoid headaches of manual compilation. Pre-compiled application with scripts can be downloaded [here](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
+
+# Build demo example app
+Download installation script and example config folder from the _example_ repository folder.
+Open windows powershell window and enter the location on your local computer.
+Then run the installation script with `.\install.ps1`.
+If not running powershell in administrator mode, you'll be prompted to elevate (this is required to create symbolic links by the script).
+
+Installation script will automatically create necessary folders and downloads the app.
+You can open _DAZ Studio_, load the the _main_ script located in app folder and execute it.
+The default/demo configuration will be used with _Genesis 8.1_ characters.
+
+## Demo example notes
+Example works with following subfolders:
+- `config`: the one downloaded from repository, containts sample config files
+- `app`: the location where the latest app will be downloaded
+- `temp`: symbolic links to intermediate alembic cache/fbx export folders will be created
+- `exports`: exported DTH objects will be stored here if default configuration was not changed
+
+The default/demo configuration is assuming intermediate FBX (Daz to Maya) folder to be: `<user-home-directory>\Documents\DAZ 3D\Bridges\Daz To Maya\Exports`.
+
+The alembic cache export directory is altered by the application itself, but the demo configuration sets it to be `<windows-apps-temp-dir>\DTH-AutoTool\Exports\ABC-Temp`. You can change it manually in `install.ps1` if needed.
+
+Only symbolic links will be created inside `temp` directory.
 
 # Install `tesseract` (optional)
 DTH-AutoTool can handle popups using `key-sequencing` or `visual-lookup` methods.

@@ -1,0 +1,37 @@
+{
+    "version": "0.1",
+    "edit_mode": {
+        "is_enabled": false,
+        "exportable_name": "",
+        "clothing_name": ""
+    },
+    "export_settings": {
+        "tags": ["not-yet-supported"],
+        "sagan_alembic_export_directory": "../temp/abc",
+        "daz_to_maya_export_directory": "../temp/fbx",
+        "default_output_directory": "../exports"
+    },
+    "dth_autotool": {
+        "executable_path": "./dthautotool.exe",
+        "executable_config_path": "./app.config.json",
+        "alembic_exporter_template_config_path": "./abc.config.sagan"
+    },
+    "templates": [
+        {
+            "name": "Default Female",
+            "character": [ { "name": "Genesis 8.1 Basic Female", "layers": ["genesis 8.1 basic female.duf"] } ],
+            "clothing": [ { "name": "Basic Female Wear", "layers": ["basic wear tank top.duf", "basic wear shorts.duf"] } ],
+            "morphs": [ { "name": "DTH", "layers": ["G8.1 LINEAR JCM - Base.duf"] } ]
+        },
+        {
+            "name": "Default Male",
+            "character": [ { "name": "Genesis 8.1 Male", "layers": ["genesis 8.1 basic male.duf"] } ],
+            "clothing": [ { "name": "Basic Male Wear", "layers": ["basic wear t shirt.duf", "basic wear boxers.duf"] } ],
+            "morphs": [ { "name": "DTH", "layers": ["G8.1 LINEAR JCM - Base.duf"] } ]
+        }
+    ],
+    "exportables": [
+        { "name": "Adam", "templates": ["Default Male"] },
+        { "name": "Eve", "templates": ["Default Female"] }
+    ]
+}

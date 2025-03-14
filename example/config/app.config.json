@@ -1,0 +1,16 @@
+{
+  "img_patterns_path": "./patterns",
+  "mouse_sleep_ms": 10,
+  "key_sleep_ms": 10,
+  "screen_search_validation": {
+    "pattern_max_retry_attempts": 3,
+    "pattern_retry_attempt_delay_ms": 1000,
+    "tesseract_validation": {
+      "enabled": true,
+      "lang": "eng",
+      "jaro_wrinkler_validation": {
+        "enabled": true
+      }
+    }
+  }
+}
