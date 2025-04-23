@@ -56,48 +56,55 @@ It is highly recommended to install `tesseract` app when using `visual-lookup` m
 
 # How to compile
 This project depends on [robotgo](https://github.com/go-vgo/robotgo) and [gocv](https://github.com/vcaesar/gcv) libraries.
-Therefore [OpenCV](https://opencv.org/) bindings needs [opencv](https://opencv.org/) as a prerequisite. OpenCV should be compiled as part of `robotgo` dependency automatically, but see _compilation issues_ section below.
+Therefore [OpenCV](https://opencv.org/) bindings needs [opencv](https://opencv.org/) as a prerequisite.
+If you are having troubles when following steps below due to version changes in _OpenCV_/_gocv_ versions or compiler versions, I'll keep tested binaries on my public [pcloud folder](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
 
-You will need `gcc` compiler and `cmake` already pre-installed to compile OpenCV libraries. See [here](https://gocv.io/getting-started/windows/).
+Steps below are for windows only (the tool is not supported for other platforms at the moment).
 
-To link OpenCV libraries to DTH-AutoTool project, use `CGO_LDFLAGS` with following value:
+## Prerequisites
+* MinGW GCC compiler (to compile OpenCV libraries)
+* CMake (to generate build files, makefile)
+* Go compiler (to build the actual tool)
 
-```
--lade -lIlmImf -ljpeg-turbo -lopencv_aruco4100 -lopencv_bgsegm4100 -lopencv_bioinspired4100 -lopencv_calib3d4100 -lopencv_ccalib4100 -lopencv_core4100 -lopencv_datasets4100 -lopencv_dnn_objdetect4100 -lopencv_dnn_superres4100 -lopencv_dnn4100 -lopencv_dpm4100 -lopencv_face4100 -lopencv_features2d4100 -lopencv_flann4100 -lopencv_fuzzy4100 -lopencv_gapi4100 -lopencv_hfs4100 -lopencv_highgui4100 -lopencv_img_hash4100 -lopencv_imgcodecs4100 -lopencv_imgproc4100 -lopencv_intensity_transform4100 -lopencv_line_descriptor4100 -lopencv_mcc4100 -lopencv_ml4100 -lopencv_objdetect4100 -lopencv_optflow4100 -lopencv_phase_unwrapping4100 -lopencv_photo4100 -lopencv_plot4100 -lopencv_quality4100 -lopencv_rapid4100 -lopencv_reg4100 -lopencv_rgbd4100 -lopencv_shape4100 -lopencv_signal4100 -lopencv_stereo4100 -lopencv_stitching4100 -lopencv_structured_light4100 -lopencv_superres4100 -lopencv_surface_matching4100 -lopencv_text4100 -lopencv_tracking4100 -lopencv_video4100 -lopencv_videoio4100 -lopencv_videostab4100 -lopencv_wechat_qrcode4100 -lopencv_xfeatures2d4100 -lopencv_ximgproc4100 -lopencv_xobjdetect4100 -lopencv_xphoto4100 -lopenjp2 -lpng -lprotobuf -ltiff -lwebp -lzlib -lole32 -loleaut32 -luuid -lcomdlg32 -lgdi32
-```
+Check the official [gocv](https://github.com/vcaesar/gcv) README for compiler version to use.
+The latest tested MinGW version was 8.1.0.
 
-To inform the linker about where to find physical files, you can set `LIBRARY_PATH` environment variable with value:
+At the time of writing, _CMake_ version 4.X was already available. Do not use CMake 4+!
+OpenCV libraries have not been ported yet to CMake 4, **use 3.5+ instead**.
 
-```
-C:\opencv\build\install\x64\mingw\staticlib
-```
+## Steps
+* Install CMake 3.5+ (not 4.X+).
+* Install MinGW compiler 8.1.0 and make sure your `PATH` variable contains reference to its `bin` directory.
+* Install Golang toolchain.
+* Clone this repository and open command line at the root folder.
+* Run `go build` command.
+* If you did not previously compiled & installed _OpenCV_, previous build command will fail. However, it will still download the _gocv_ dependency onto your computer.
+* Enter the location where go downloads/caches packages on your computer, usually something like `<homedir>\go\pkg\mod`.
+* Find `gocv.io\x\gocv@vX.Y.Z` folder (`X.Y.Z` will be the version used by this project).
+* Open a command line and run `.\win_build_opencv.cmd`.
+  * The `CMD` file will automatically download required _OpenCV_ sources and triggers CMake & mingw32-make commands for you (this will take a while to compile and install).
+  * By default, above `CMD` file will compile & install the _OpenCV_ into `C:\OpenCV\build\install` folder. You can tweak the `win_build_opencv.cmd` to your liking before the compilation but make sure to update paths in subsequent steps accordingly. You also need only `bin`, `include` and `x64\mingw\lib` (or `x64\mingw\bin` - see below) folders to build the _dth-autotool_, everything else can be removed.
+* To compile the _dth-autotool_, you'll need to set up several environment variables before the build:
+  * You should set all environment variables below just in shell prior building the project - not globally, unless you really intend to (probably for _OpenCV_ paths).
+  * If building project with shared libraries reference, append following to your `PATH` environment `C:\opencv\build\install\x64\mingw\bin`.
+  * If building project with static libraries reference:
+    * Create new environment variable `LIBRARY_PATH` and append this location it `C:\opencv\build\install\x64\mingw\lib`.
+    * (-or-) add `-LC:\opencv\build\install\x64\mingw\bin` to the `CGO_LDFLAGS`.
+    * **IMPORTANT** - in my case, static libraries were called like `libopencv_xxx4110.dll.a` after the compilation & installation which is incorrect (probably a bug in CMake definitions). To rename all files, you can run following powershell command from the directory with static libraries installed: `Get-ChildItem *4110.dll.a | Rename-Item -NewName { $_.Name -Replace '4110.dll','' }`. Note that `4110` here is the _OpenCV_ version. Its removal is optional, but I like it removed, so my `-l` flags below are cleaner. If you keep it, update names after `-l` flags accordingly.
+  * Set `CGO_LDFLAGS` to `-lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dpm -lopencv_face -lopencv_photo -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lopencv_line_descriptor -lopencv_optflow -lopencv_reg -lopencv_rgbd -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_surface_matching -lopencv_tracking -lopencv_datasets -lopencv_dnn -lopencv_plot -lopencv_xfeatures2d -lopencv_shape -lopencv_video -lopencv_ml -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_flann -lopencv_xobjdetect -lopencv_imgcodecs -lopencv_objdetect -lopencv_xphoto -lopencv_imgproc -lopencv_core`.
+  * Set `CGO_CXXFLAGS` to `--std=c++11`.
+  * Set `CGO_CPPFLAGS` to `-IC:\opencv\build\install\include`.
+* Run `go build -o build/dth-autotool.exe` command.
 
-or you may want to use `-L<path>` cmd-line option (whatever you prefer).
+### What if compilation fails
+If compilation fails on _OpenCV_ or _gocv_ dependencies, please refer to the official repositories for guidance.
+Otherwise feel free to raise an issue in this repo or ask a question.
 
-You will need `go 1.23` compiler to compile the DTH-AutoTool project itself.
-To start compilation run:
+You can also download tested version of compiler, or pre-compiled 64-bit _OpenCV_ libraries I used from [my pcloud folder](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
+Using my _OpenCV_ build you can skip straightly to the _dth-autotool_ build part, saving you some time or potential headaches.
 
-`$ go build`
-
-command from the root directory of the project.
-
-For more information on how to compile `robotgo` and `gocv` (OpenCV bindings for `go`) see links below:
+#### Additional links
 - [Starting with GOCV on windows](https://gocv.io/getting-started/windows/)
 - [GOCV repository](https://github.com/vcaesar/gcv)
 - [RobotGo repository](https://github.com/go-vgo/robotgo)
 - [OpenCV official site](https://opencv.org/)
-
-#### Pre-built OpenCV binaries
-You can use 64-bit binaries I already built from [this link](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
-Note that these libraries were built with `-D_GLIBCXX_USE_CXX11_ABI=0` option so when building the DTH-AutoTool project you'll have to set `CGO_CFLAGS` with this option as well to link it properly.
-
-#### Dealing with `robotgo` compilation issues
-If you are facing issues related to `freetype` module (OpenCV) compilation, you may need to manually skip this module (it is not used in this project anyways).
-
-If you already ran compilation of the project, you probably already have `GOCV` sources downloaded. Otherwise run `go get` command to fetch it.
-
-Enter the `go`s staging directory, usually something like `<user-home-directory>\Go\pkg\mod\gocv.io\x\gocv@v0.38.0`. Build commands are scripted in `win_build_opencv.cmd`. Open the file in text editor and locate the `cmake` invocation. Then add this as a command line parameter `-DBUILD_opencv_freetype=OFF`.
-
-After this change, you want only to re-generate the `makefile` using `cmake` and compile the libraries. However `win_build_opencv.cmd` contains also download steps that would overwrite your changes so you either want to comment them out and re-run the `win_build_opencv.cmd` or run `cmake` and `make` commands yourself (manually) as they are defined inside the `win_build_opencv.cmd`.
-
-After running `make install` you should see compiled OpenCV libraries in `C:\opencv\build\install\x64\mingw\staticlib` by default.
