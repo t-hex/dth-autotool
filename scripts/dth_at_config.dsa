@@ -258,22 +258,6 @@ Object.defineProperty( DthAutoToolBaseTemplate.prototype, "morphsLayerGroups", {
 DthAutoToolBaseTemplate.prototype.load = function( oConfig ) {
     this._sName = Cast.AsNotNullOrEmpty( oConfig.name, "Valid name must be provided for template" );
 
-//    this._mCharacterLayerGroups = new OrderedKeyValueSet();
-//    this._mClothingLayerGroups = new OrderedKeyValueSet();
-//    this._mMorphsLayerGroups = new OrderedKeyValueSet();
-//
-//    if( oConfig.character ) {
-//        this._loadConfigLayerGroups( oConfig.character, this.characterLayerGroups );
-//    }
-//
-//    if( oConfig.clothing ) {
-//        this._loadConfigLayerGroups( oConfig.clothing, this.clothingLayerGroups );
-//    }
-//
-//    if( oConfig.morphs ) {
-//        this._loadConfigLayerGroups( oConfig.morphs, this.morphsLayerGroups );
-//    }
-
     var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
     var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
 
@@ -378,18 +362,6 @@ DthAutoToolExportable.prototype.load = function( oConfig ) {
         }
         this._aTemplateNames = aTemplateNamesConfig;
     }
-//
-//    this._mPrependCharacterLayerGroups = new OrderedKeyValueSet();
-//    this._mOverrideCharacterLayerGroups = new OrderedKeyValueSet();
-//    this._mAppendCharacterLayerGroups = new OrderedKeyValueSet();
-//
-//    this._mPrependClothingLayerGroups = new OrderedKeyValueSet();
-//    this._mOverrideClothingLayerGroups = new OrderedKeyValueSet();
-//    this._mAppendClothingLayerGroups = new OrderedKeyValueSet();
-//
-//    this._mPrependMorphsLayerGroups = new OrderedKeyValueSet();
-//    this._mOverrideMorphsLayerGroups = new OrderedKeyValueSet();
-//    this._mAppendMorphsLayerGroups = new OrderedKeyValueSet();
 
     var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
     var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
@@ -625,30 +597,6 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
            }
         }
     }
-
-//    for( var t=0; t<oExportable.templates.length; t+=1 ) {
-//        var sTemplate = oExportable.templates[ t ];
-//        var oBaseTemplate = this.baseTemplates.get( sTemplate );
-//        if( !oBaseTemplate ) {
-//            throw new Error( "Invalid template name provided for exportable '%1': %2".arg( sName ).arg( sTemplate ) );
-//        }
-//        mExpCharacterLayerGroups.union( oBaseTemplate.characterLayerGroups, "back" );
-//        mExpClothingLayerGroups.union( oBaseTemplate.clothingLayerGroups, "back" );
-//        mExpMorphsLayerGroups.union( oBaseTemplate.morphsLayerGroups, "back" );
-//    }
-//
-//    mExpCharacterLayerGroups.union( oExportable.prependCharacterLayerGroups, "front" );
-//    mExpClothingLayerGroups.union( oExportable.prependClothingLayerGroups, "front" );
-//    mExpMorphsLayerGroups.union( oExportable.prependMorphsLayerGroups, "front" );
-//
-//    mExpCharacterLayerGroups.union( oExportable.appendCharacterLayerGroups, "back" );
-//    mExpClothingLayerGroups.union( oExportable.appendClothingLayerGroups, "back" );
-//    mExpMorphsLayerGroups.union( oExportable.appendMorphsLayerGroups, "back" );
-//
-//
-//    mExpCharacterLayerGroups.override( oExportable.overrideCharacterLayerGroups );
-//    mExpClothingLayerGroups.override( oExportable.overrideClothingLayerGroups );
-//    mExpMorphsLayerGroups.override( oExportable.overrideMorphsLayerGroups );
 
     return new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mProperties.get( "clothing" ), mProperties.get( "morphs" ) );
 };
