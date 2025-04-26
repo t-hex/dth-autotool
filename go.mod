@@ -8,8 +8,8 @@ require (
 	github.com/go-vgo/robotgo v0.110.7
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/lithammer/fuzzysearch v1.1.8
-	github.com/lxn/win v0.0.0-20210218163916-a377121e959e
 	github.com/sirupsen/logrus v1.9.3
+	github.com/tailscale/win v0.0.0-20250213223159-5992cb43ca35
 	github.com/vcaesar/gcv v0.43.2
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
@@ -26,12 +26,12 @@ require (
 	github.com/jezek/xgb v1.1.1 // indirect
 	github.com/kbinani/screenshot v0.0.0-20250118074034-a3924b7bbc8c // indirect
 	github.com/lufia/plan9stats v0.0.0-20250317134145-8bc96cf8fc35 // indirect
+	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/otiai10/gosseract v2.2.1+incompatible // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/robotn/xgb v0.10.0 // indirect
 	github.com/robotn/xgbutil v0.10.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.3 // indirect
-	github.com/tailscale/win v0.0.0-20250213223159-5992cb43ca35 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/vcaesar/gops v0.40.0 // indirect

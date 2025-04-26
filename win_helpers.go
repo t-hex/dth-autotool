@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-vgo/robotgo"
-	"github.com/lxn/win"
 	"github.com/sirupsen/logrus"
+	"github.com/tailscale/win"
 	"time"
 )
 
@@ -51,16 +51,22 @@ func (c *WinAwait) AwaitOpen() (WinOnScreenInfo, error) {
 		return WinOnScreenInfo{}, errors.New("logger object not provided")
 	}
 
-	c.Logger.Infoln(fmt.Sprintf("Searching '%s' window", c.Title))
+	c.Logger.Info(fmt.Sprintf("Searching '%s' window", c.Title))
 
 	winInfo, err := GetWindowInfo(c.Title, c.AwaitTimeout, c.Logger)
 	if err != nil {
 		return WinOnScreenInfo{}, err
 	}
 
-	win.BringWindowToTop(winInfo.Handle)
-	win.SetFocus(winInfo.Handle)
-	time.Sleep(c.SleepDuration)
+	maxFocusAttempts := 10
+	win.SetForegroundWindow(winInfo.Handle)
+	for notFocused := true; notFocused; notFocused = win.GetForegroundWindow() != winInfo.Handle {
+		if maxFocusAttempts -= 1; maxFocusAttempts <= 0 {
+			return WinOnScreenInfo{}, errors.New(fmt.Sprintf("Failed to focus '%s' window", c.Title))
+		}
+		time.Sleep(c.SleepDuration)
+		win.SetForegroundWindow(winInfo.Handle)
+	}
 
 	return winInfo, nil
 }
@@ -72,7 +78,7 @@ func (c *WinAwait) AwaitClose() error {
 	if c.Logger == nil {
 		return errors.New("logger object not provided")
 	}
-	c.Logger.Infoln(fmt.Sprintf("Searching '%s' window", c.Title))
+	c.Logger.Info(fmt.Sprintf("Searching '%s' window", c.Title))
 
 	isClosed, err := AwaitWindowClosed(c.Title, c.AwaitTimeout, c.Logger)
 	if err != nil {
