@@ -10,14 +10,21 @@ This repository is still work in progress and mostly reflects my personal workfl
 If you want to avoid headaches of manual compilation. Pre-compiled application with scripts can be downloaded [here](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
 
 # Build demo example app
-Download installation script and example config folder from the _example_ repository folder.
-Open windows powershell window and enter the location on your local computer.
-Then run the installation script with `.\install.ps1`.
-If not running powershell in administrator mode, you'll be prompted to elevate (this is required to create symbolic links by the script).
+- Download installation script and example config folder from the _example_ repository folder.
+- Open windows powershell window and enter the location on your local computer.
+- Run the installation script with `.\install.ps1`, if not running powershell in administrator mode, you'll be prompted to elevate (this is required to create symbolic links by the script).
+- Open _DAZ Studio Install Manager_ and install **Genesis 8 [Male|Female] Starter Essentials** (used by the example).
+- Install [DTH](https://www.artstation.com/marketplace/p/BLM5K/daztohue), [Sagan Alembic Exporter Plugin](https://www.daz3d.com/forums/discussion/428856/sagan-a-daz-studio-to-blender-alembic-exporter/p1) and [DazToMaya Bridge](https://www.daz3d.com/daz-to-maya-bridge).
+- Since the DTH-AutoTool app uses `Asset Manager` API, all assets including DTH must be indexed in DAZ database. The easiest way to include it is to create a new category from the _DTH_ folder and its subfolders.
+  - Open the _Content Library_ pane and navigate to the location where you installed _DTH Contents_ (usually `DAZ Studio Formats/My Library/DazToHue`).
+  - Right click the `DazToHue` and select `Create a Category from->Selected Folder & Sub-Folders`.
+  - You should see now `DazToHue` in `Categories` section.
+- In _DAZ Studio_, open the _Script IDE_ pane and load the the _main_ script located in app folder and execute it.
 
-Installation script will automatically create necessary folders and downloads the app.
-You can open _DAZ Studio_, load the the _main_ script located in app folder and execute it.
-The default/demo configuration will be used with _Genesis 8.1_ characters.
+If everything is setup properly, script and DTH-AutoTool should automatically load and export models into the demo app's _Export_ folder.
+
+Installation script will automatically create necessary folders and downloads the latest version of the app.
+The default/demo configuration will be used with _Genesis 8.1_ characters and some basic clothing which is part of the essentials pack.
 
 ## Demo example notes
 Example works with following subfolders:
