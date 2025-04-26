@@ -35,11 +35,11 @@ func (o SaganAlembicExportDialogHandler) ValidateHandlingMethod(code HandlingMet
 func (o SaganAlembicExportDialogHandler) StepLoadSaganAlembicExportConfig(
 	method HandlingMethodCode,
 	dzSaganAlembicExportWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln(fmt.Sprintf("Loading 'Sagan Alembic Export' configuration"))
+	o.logger.Info(fmt.Sprintf("Loading 'Sagan Alembic Export' configuration"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
-		for range 4 {
+		for range 7 {
 			err := robotgo.KeyTap(robotgo.Tab, robotgo.Lshift)
 			if err != nil {
 				return err
@@ -73,7 +73,7 @@ func (o SaganAlembicExportDialogHandler) StepLoadSaganAlembicExportConfig(
 			return err
 		}
 
-		o.logger.Debugln("Accept button found: ", position)
+		o.logger.Debug("Accept button found: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -87,7 +87,7 @@ func (o SaganAlembicExportDialogHandler) StepSelectSaganAlembicExportConfig(
 	method HandlingMethodCode,
 	dzSaganAlembicLoadCfgWinInfo WinOnScreenInfo,
 	configFileAbsPath string) error {
-	o.logger.Infoln(fmt.Sprintf("Selecting 'Sagan Alembic Export' configuration file'"))
+	o.logger.Info(fmt.Sprintf("Selecting 'Sagan Alembic Export' configuration file'"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -111,7 +111,7 @@ func (o SaganAlembicExportDialogHandler) StepSelectSaganAlembicExportConfig(
 			return err
 		}
 
-		o.logger.Debugln("\"File Name\" input text box found at: ", position)
+		o.logger.Debug("\"File Name\" input text box found at: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -149,7 +149,7 @@ func (o SaganAlembicExportDialogHandler) StepSelectSaganAlembicExportConfig(
 }
 
 func (o SaganAlembicExportDialogHandler) StepGenerateTemporaryExportConfig() (string, error) {
-	o.logger.Infoln("Setting up timeline range ")
+	o.logger.Info("Setting up timeline range ")
 
 	cfg, err := ini.Load(o.cfg.DazStudio.SaganAlembicExportHandler.SaganConfigFilePath)
 	if err != nil {
@@ -179,7 +179,7 @@ func (o SaganAlembicExportDialogHandler) StepGenerateTemporaryExportConfig() (st
 func (o SaganAlembicExportDialogHandler) StepSetupTimelineRange(
 	method HandlingMethodCode,
 	dzSaganAlembicExportWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln(fmt.Sprintf("Setting up timeline range 0-%d", o.cfg.DazStudio.SaganAlembicExportHandler.TimelineEndFrame))
+	o.logger.Info(fmt.Sprintf("Setting up timeline range 0-%d", o.cfg.DazStudio.SaganAlembicExportHandler.TimelineEndFrame))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -208,7 +208,7 @@ func (o SaganAlembicExportDialogHandler) StepSetupTimelineRange(
 			return err
 		}
 
-		o.logger.Debugln("\"End Frame\" input range box found at: ", position)
+		o.logger.Debug("\"End Frame\" input range box found at: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click(robotgo.Mleft, true)
@@ -222,7 +222,7 @@ func (o SaganAlembicExportDialogHandler) StepSetupTimelineRange(
 func (o SaganAlembicExportDialogHandler) StepAcceptSaganAlembicExport(
 	method HandlingMethodCode,
 	dzSaganAlembicExportWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln(fmt.Sprintf("Starting 'Sagan Alembic Export' process"))
+	o.logger.Info(fmt.Sprintf("Starting 'Sagan Alembic Export' process"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -262,7 +262,7 @@ func (o SaganAlembicExportDialogHandler) StepAcceptSaganAlembicExport(
 			return err
 		}
 
-		o.logger.Debugln("Export button found: ", position)
+		o.logger.Debug("Export button found: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -275,7 +275,7 @@ func (o SaganAlembicExportDialogHandler) StepAcceptSaganAlembicExport(
 func (o SaganAlembicExportDialogHandler) StepCloseSaganAlembicExportDialog(
 	method HandlingMethodCode,
 	dzSaganAlembicExportWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln(fmt.Sprintf("Starting 'Sagan Alembic Export' process"))
+	o.logger.Info(fmt.Sprintf("Starting 'Sagan Alembic Export' process"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -313,7 +313,7 @@ func (o SaganAlembicExportDialogHandler) StepCloseSaganAlembicExportDialog(
 			return err
 		}
 
-		o.logger.Debugln("Done button found: ", position)
+		o.logger.Debug("Done button found: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -325,13 +325,13 @@ func (o SaganAlembicExportDialogHandler) StepCloseSaganAlembicExportDialog(
 
 func (o SaganAlembicExportDialogHandler) Run() error {
 	method, err := o.ValidateHandlingMethod(o.cfg.DazStudio.SaganAlembicExportHandler.HandlingMethod)
-	o.logger.Infoln(fmt.Sprintf("Running SaganAlembicExportDialogHandler [method:%d]", method))
+	o.logger.Info(fmt.Sprintf("Running SaganAlembicExportDialogHandler [method:%d]", method))
 
 	dzPid, err := FocusToProcess(o.cfg.DazStudio.ProcessName, o.logger)
 	if err != nil {
 		return err
 	}
-	o.logger.Infoln("Process found with PID: ", dzPid)
+	o.logger.Info("Process found with PID: ", dzPid)
 
 	winAwait := WinAwait{
 		SleepDuration: 1 * time.Second,
@@ -390,7 +390,7 @@ func (o SaganAlembicExportDialogHandler) Run() error {
 	if err != nil {
 		return err
 	}
-	o.logger.Infoln(fmt.Sprintf("Waiting for export window to finish [%d]", dzExpProgressWinInfo.Handle))
+	o.logger.Info(fmt.Sprintf("Waiting for export window to finish [%d]", dzExpProgressWinInfo.Handle))
 	err = winAwait.
 		WithAwaitTimeout(time.Minute * time.Duration(o.cfg.DazStudio.SaganAlembicExportHandler.MaxExportDurationMinutes)).
 		AwaitClose()

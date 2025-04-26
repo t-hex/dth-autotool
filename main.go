@@ -5,9 +5,11 @@ import (
 	"github.com/go-vgo/robotgo"
 	"github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -17,7 +19,18 @@ func main() {
 		panic(err)
 	}
 
+	logFile := "dthautotool.log"
+	f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		panic(err)
+	}
 	var logger = logrus.New()
+	logger.SetOutput(io.MultiWriter(f, os.Stdout))
+	logger.SetLevel(logrus.InfoLevel) // default = InfoLevel, override with cmd params
+	defer func() { _ = f.Close() }()
+
+	logger.Info(strings.Join(os.Args, " "))
+
 	if DthAutoToolCmdOptions.LogLevel != "" {
 		logLevel, err := logrus.ParseLevel(DthAutoToolCmdOptions.LogLevel)
 		if err != nil {
@@ -116,7 +129,6 @@ func main() {
 	robotgo.MouseSleep = cfg.MouseSleepMs
 	robotgo.KeySleep = cfg.KeySleepMs
 
-	logger.Out = os.Stdout
 	var mode DthAutoToolOpMode
 
 	switch DthAutoToolCmdOptions.OpMode {

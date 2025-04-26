@@ -32,7 +32,7 @@ func (o DazToMayaExportDialogHandler) ValidateHandlingMethod(code HandlingMethod
 func (o DazToMayaExportDialogHandler) StepSetAssetName(
 	method HandlingMethodCode,
 	dzToMayaExpWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln(fmt.Sprintf("Setting up 'Asset Name'"))
+	o.logger.Info(fmt.Sprintf("Setting up 'Asset Name'"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -63,7 +63,7 @@ func (o DazToMayaExportDialogHandler) StepSetAssetName(
 			return err
 		}
 
-		o.logger.Debugln("\"Asset Name\" input text box found at: ", position)
+		o.logger.Debug("\"Asset Name\" input text box found at: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click("left", true)
@@ -77,7 +77,7 @@ func (o DazToMayaExportDialogHandler) StepSetAssetName(
 func (o DazToMayaExportDialogHandler) StepSetAssetType(
 	method HandlingMethodCode,
 	dzToMayaExpWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln(fmt.Sprintf("Setting up 'Asset Type'"))
+	o.logger.Info(fmt.Sprintf("Setting up 'Asset Type'"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -131,7 +131,7 @@ func (o DazToMayaExportDialogHandler) StepOpenSubdivisionsDialog(
 	method HandlingMethodCode,
 	dzToMayaExpWinInfo WinOnScreenInfo) error {
 
-	o.logger.Infoln(fmt.Sprintf("Opening subdivisions setup dialog"))
+	o.logger.Info(fmt.Sprintf("Opening subdivisions setup dialog"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -166,7 +166,7 @@ func (o DazToMayaExportDialogHandler) StepOpenSubdivisionsDialog(
 			return err
 		}
 
-		o.logger.Debugln("\"Bake Subdivision Levels\" button found at: ", position)
+		o.logger.Debug("\"Bake Subdivision Levels\" button found at: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -181,7 +181,7 @@ func (o DazToMayaExportDialogHandler) StepOpenSubdivisionsDialog(
 func (o DazToMayaExportDialogHandler) StepSetSubdivisionLevels(
 	method HandlingMethodCode,
 	dzSubdivisionWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln("Setting up subdivision levels")
+	o.logger.Info("Setting up subdivision levels")
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -250,7 +250,7 @@ func (o DazToMayaExportDialogHandler) StepSetSubdivisionLevels(
 
 		const maxIterations = 100 // to prevent infinite loop in case of error
 		for i, c := 0, float32(1.0); i < maxIterations && c >= 0.95; i++ {
-			o.logger.Debugln(fmt.Sprintf("Changing subdivision level entry [%d]", i+1))
+			o.logger.Debug(fmt.Sprintf("Changing subdivision level entry [%d]", i+1))
 			err = robotgo.KeyTap(robotgo.Key1)
 			if err != nil {
 				return err
@@ -273,7 +273,7 @@ func (o DazToMayaExportDialogHandler) StepSetSubdivisionLevels(
 func (o DazToMayaExportDialogHandler) StepAcceptSubdivisionsDialog(
 	method HandlingMethodCode,
 	dzSubdivisionWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln("Confirm subdivision levels")
+	o.logger.Info("Confirm subdivision levels")
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -319,7 +319,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptSubdivisionsDialog(
 func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 	method HandlingMethodCode,
 	dzToMayaExportWinInfo WinOnScreenInfo) error {
-	o.logger.Infoln("Confirm asset export")
+	o.logger.Info("Confirm asset export")
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -356,7 +356,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 			return err
 		}
 
-		o.logger.Debugln("Accept button found: ", position)
+		o.logger.Debug("Accept button found: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -364,7 +364,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 		return errors.New("unsupported handling method")
 	}
 
-	o.logger.Infoln("Exporting asset...")
+	o.logger.Info("Exporting asset...")
 
 	return nil
 }
@@ -373,7 +373,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportFinishedDialog(
 	method HandlingMethodCode,
 	dzToMayaExportFinishedWinInfo WinOnScreenInfo) error {
 
-	o.logger.Infoln("Confirming export finished")
+	o.logger.Info("Confirming export finished")
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -393,7 +393,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportFinishedDialog(
 			return err
 		}
 
-		o.logger.Debugln("OK button found: ", position)
+		o.logger.Debug("OK button found: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -408,7 +408,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportObjectBakingDialog(
 	method HandlingMethodCode,
 	dzToMayaExportObjectBakingWinInfo WinOnScreenInfo) error {
 
-	o.logger.Infoln("Confirming export object baking")
+	o.logger.Info("Confirming export object baking")
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -431,7 +431,7 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportObjectBakingDialog(
 			return err
 		}
 
-		o.logger.Debugln("Yes button found: ", position)
+		o.logger.Debug("Yes button found: ", position)
 
 		robotgo.Move(position.X, position.Y)
 		robotgo.Click()
@@ -444,13 +444,13 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportObjectBakingDialog(
 
 func (o DazToMayaExportDialogHandler) Run() error {
 	method, err := o.ValidateHandlingMethod(o.cfg.DazStudio.LoadAssetResizeTimelineHandler.HandlingMethod)
-	o.logger.Infoln(fmt.Sprintf("Running DazToMayaExportDialogHandler [method:%d]", method))
+	o.logger.Info(fmt.Sprintf("Running DazToMayaExportDialogHandler [method:%d]", method))
 
 	dzPid, err := FocusToProcess(o.cfg.DazStudio.ProcessName, o.logger)
 	if err != nil {
 		return err
 	}
-	o.logger.Infoln("Process found with PID: ", dzPid)
+	o.logger.Info("Process found with PID: ", dzPid)
 
 	winAwait := WinAwait{
 		SleepDuration: 1 * time.Second,
