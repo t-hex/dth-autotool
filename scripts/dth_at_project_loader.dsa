@@ -1,5 +1,14 @@
 eval(include( "dth_at_exporter" ));
 
+function ExecuteSteps( aSteps ) {
+    for ( var i=0; i<aSteps.length; i+=1 ) {
+        aSteps[ i ]();
+        processEvents();
+        if ( progressIsCancelled() ) { return false; }
+    }
+    return true;
+}
+
 /*********************************************************************/
 // Module execution code block
 (function( aArgs ){
@@ -28,36 +37,54 @@ eval(include( "dth_at_exporter" ));
         oDthAutoToolExporter.loadMorphs();
     } else {
         var aExportableKeys = oDthAutoToolConfig.exportables.keys();
+
+        startProgress( text( "DTH-AutoTool export progress" ), aExportableKeys.length, true, true );
+        processEvents();
+
         for( var i=0; i<aExportableKeys.length; i+=1 )
         {
+            App.statusLine( aExportableKeys[ i ] );
+
             print( "Loading exportable: \"%1\"".arg( aExportableKeys[ i ] ) );
 
             var oExportable = oDthAutoToolConfig.exportables.get( aExportableKeys[ i ] );
             var oExportPlan = oDthAutoToolConfig.build( oExportable.name );
+            if( !oExportPlan ) { continue; }
             var sOutputName = oExportPlan.name
 
             var oDthAutoToolExporter = new DthAutoToolExporter( oExportPlan, oDthAutoToolConfig.dthAutoToolConfig, oDthAutoToolConfig.exportSettings );
 
             // export pure character without clothings first
-            oDthAutoToolExporter.prepareScene();
-            oDthAutoToolExporter.loadCharacter();
-            oDthAutoToolExporter.loadMorphs();
-            oDthAutoToolExporter.startExport();
-            oDthAutoToolExporter.copyResult( sOutputName );
+            if( !ExecuteSteps( [
+                function() { oDthAutoToolExporter.prepareScene(); },
+                function() { oDthAutoToolExporter.loadCharacter(); },
+                function() { oDthAutoToolExporter.loadMorphs(); },
+                function() { oDthAutoToolExporter.startExport(); },
+                function() { oDthAutoToolExporter.copyResult( sOutputName ); }
+            ] ) ) { break; }
 
             // if clothings defined export character with each clothing
             var aClothingKeys = oDthAutoToolExporter.clothings;
             if( aClothingKeys.length > 0 ) {
                 for( var j=0; j<aClothingKeys.length; j+=1 ) {
-                    oDthAutoToolExporter.prepareScene();
-                    oDthAutoToolExporter.loadCharacter();
-                    oDthAutoToolExporter.loadClothing( aClothingKeys[ j ] );
-                    oDthAutoToolExporter.loadMorphs();
-
-                    oDthAutoToolExporter.startExport();
-                    oDthAutoToolExporter.copyResult( "%1 - %2".arg( sOutputName ).arg( aClothingKeys[ j ] ) );
+                    if( !ExecuteSteps( [
+                        function() { oDthAutoToolExporter.prepareScene(); },
+                        function() { oDthAutoToolExporter.loadCharacter(); },
+                        function() { oDthAutoToolExporter.loadClothing( aClothingKeys[ j ] ); },
+                        function() { oDthAutoToolExporter.loadMorphs(); },
+                        function() { oDthAutoToolExporter.startExport(); },
+                        function() { oDthAutoToolExporter.copyResult( "%1 - %2".arg( sOutputName ).arg( aClothingKeys[ j ] ) ); }
+                    ] ) ) { break; }
                 }
             }
+            
+            stepProgress( 1 );
         }
+
+        if( progressIsCancelled() ) {
+            App.statusLine( text( "DTH-AutoTool export progress cancelled" ) );
+            print( "DTH-AutoTool export progress cancelled" );
+        }
+        finishProgress();
     }
 })();
