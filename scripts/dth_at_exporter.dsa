@@ -323,7 +323,7 @@ DthAutoToolExporter.prototype.loadMorphs = function() {
 /*********************************************************************/
 // Function to check if exportable contains clothing layer group with given name
 DthAutoToolExporter.prototype.loadClothing = function( sClothing ) {
-    print( "Loading clothing layers for \"%1\"".arg( this.exportableName ) );
+    print( "Loading clothing layers \"%1\" for exportable \"%2\"".arg( sClothing ).arg( this.exportableName ) );
 
     if( !this._oPrimaryFigure ) {
         throw new Error( "Character not loaded yet - primary figure not found" );
@@ -444,7 +444,7 @@ DthAutoToolExporter.prototype.copyResult = function( sExportableName ) {
 /*********************************************************************/
 // Prepares scene for fresh new setup
 DthAutoToolExporter.prototype.prepareScene = function() {
-    print( "Prepraing scene for \"%1\"".arg( this.exportableName ) );
+    print( "Preparing scene for \"%1\"".arg( this.exportableName ) );
     Scene.clear();
 }
 

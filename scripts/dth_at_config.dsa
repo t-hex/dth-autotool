@@ -50,10 +50,74 @@ DthAutoToolEditModeConfig.prototype.load = function( oConfig ) {
 }
 
 /*********************************************************************/
+// DthAutoToolExportPatternsConfig constructor
+function DthAutoToolExportPatternsConfig( oExportPatternsConfig ) {
+    DthAutoToolExportPatternsConfig.prototype.load.call( this, oExportPatternsConfig );
+}
+
+Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "exportables", {
+    get: function() {
+        return this._oExportablesPattern;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "templates", {
+    get: function() {
+        return this._oTemplatesPattern;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "clothing", {
+    get: function() {
+        return this._oClothingPattern;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "layers", {
+    get: function() {
+        return this._oLayersPattern;
+    }
+} );
+
+/*********************************************************************/
+// Function to load parsed JSON configuration object with export patterns.
+DthAutoToolExportPatternsConfig.prototype.load = function( oExportPatternsConfig ) {
+    this._oExportablesPattern = null;
+    this._oTemplatesPattern = null;
+    this._oClothingPattern = null;
+    this._oLayersPattern = null;
+    
+    if( !oExportPatternsConfig ) { return; }
+    
+    if( oExportPatternsConfig.exportables && oExportPatternsConfig.exportables !== "" ) {
+        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.exportables, "Exportables export pattern must be a regexp string" );
+        this._oExportablesPattern = new RegExp( sPattern );
+    }
+    if( oExportPatternsConfig.templates && oExportPatternsConfig.templates !== "" ) {
+        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.templates, "Templates export pattern must be a regexp string" );
+        this._oTemplatesPattern = new RegExp( sPattern );
+    }
+    if( oExportPatternsConfig.clothing && oExportPatternsConfig.clothing !== "" ) {
+        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.clothing, "Clothing export pattern must be a regexp string" );
+        this._oClothingPattern = new RegExp( sPattern );
+    }
+    if( oExportPatternsConfig.layers && oExportPatternsConfig.layers !== "" ) {
+        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.layers, "Layers export pattern must be a regexp string" );
+        this._oLayersPattern = new RegExp( sPattern );
+    }
+};
+
+/*********************************************************************/
 // DthAutoToolExportConfig constructor
 function DthAutoToolExportConfig( oConfig ) {
     this.load( oConfig );
 }
+
+Object.defineProperty( DthAutoToolExportConfig.prototype, "exportPatterns", {
+    get: function() {
+        return this._oExportPatterns;
+    }
+} );
 
 Object.defineProperty( DthAutoToolExportConfig.prototype, "saganAlembicExportDirAbsPath", {
     get: function() {
@@ -102,6 +166,8 @@ DthAutoToolExportConfig.prototype.load = function( oConfig ) {
     this._oDazToMayaExportDir = this._buildDirInfoFromPath( sDazToMayaExportDirectory );
     this._oDefaultExportDir = this._buildDirInfoFromPath( sDefaultExportOutputDirectory );
     //var aFiles = oSaganAlembicExportDir.entryList( "*.dsa", DzDir.Files, DzDir.Name );
+
+    this._oExportPatterns = new DthAutoToolExportPatternsConfig( oConfig.export_patterns );
 };
 
 /*********************************************************************/
@@ -545,14 +611,18 @@ DthAutoToolConfiguration.prototype.parse = function( sJson ) {
 DthAutoToolConfiguration.prototype.build = function( sName ) {
     Assert.NotNullOrEmpty( sName, "Invalid exportable name to build" );
 
+    var oExportPatterns = this.exportSettings.exportPatterns;
+
     var oExportable = this.exportables.get( sName );
     if( !oExportable ) {
         throw new Error( "Exportable with this name does not exist: %1".arg( sName ) );
     }
 
-//    var mExpCharacterLayerGroups = new OrderedKeyValueSet();
-//    var mExpClothingLayerGroups = new OrderedKeyValueSet();
-//    var mExpMorphsLayerGroups = new OrderedKeyValueSet();
+    // filter by Exportable name
+    if( oExportPatterns.exportables && !oExportPatterns.exportables.test( sName ) ) {
+        print( "Skipping exportable: '%1' due to 'exportables' pattern".arg( sName ) );
+        return null;
+    }
 
     var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
     var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
@@ -571,13 +641,26 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         var mExpLayerGroups = new OrderedKeyValueSet();
         mProperties.add( sPropertyName, mExpLayerGroups );
 
+        // filter by Template name
+        var bHasMatchedTemplate = true; // only relevant if export pattern specified
+        if( oExportPatterns.templates ) { bHasMatchedTemplate = false; }
+
         for( var t=0; t<oExportable.templates.length; t+=1 ) {
             var sTemplate = oExportable.templates[ t ];
+
+            // test pattern only until first match is found
+            if( !bHasMatchedTemplate && oExportPatterns.templates.test( sTemplate ) ) { bHasMatchedTemplate = true; }
+
             var oBaseTemplate = this.baseTemplates.get( sTemplate );
             if( !oBaseTemplate ) {
                 throw new Error( "Invalid template name provided for exportable '%1': %2".arg( sName ).arg( sTemplate ) );
             }
             mExpLayerGroups.union( oBaseTemplate[ sBasePropName ], "back" );
+        }
+
+        if( !bHasMatchedTemplate ) {
+            print( "Skipping exportable: '%1' due to 'templates' pattern".arg( sName ) );
+            return null;
         }
 
         for( var pp=0; pp<aLayerGroupsPropertiesPrefixes.length; pp+=1 ) {
@@ -598,7 +681,42 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         }
     }
 
-    return new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mProperties.get( "clothing" ), mProperties.get( "morphs" ) );
+    // filter clothings by Clothing pattern
+    var mClothingLayerGroupsToExport = mProperties.get( "clothing" );
+    if( oExportPatterns.clothing && !oExportPatterns.clothing !== "" ) {
+        var aClothingLayerGroupsKeys = mClothingLayerGroupsToExport.keys();
+        for( var i=0; i<aClothingLayerGroupsKeys.length; i+=1 ) {
+            if( !oExportPatterns.clothing.test( aClothingLayerGroupsKeys[ i ] ) ) {
+                print( "Skipping exportables: '%1' clothing: '%2' due to 'clothing' pattern".arg( sName ).arg( i ) );
+                mClothingLayerGroupsToExport.remove( aClothingLayerGroupsKeys[ i ] );
+            }
+        }
+    }
+
+    var oExportPlan = new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mClothingLayerGroupsToExport, mProperties.get( "morphs" ) );
+
+    // filter by Layer (duf file or asset) name
+    if( oExportPatterns.layers && !oExportPatterns.layers !== "" ) {
+        // merge all layers together for pattern matching purposes
+        var aCharacterLayers = oExportPlan.character;
+        var aMorphsLayers = oExportPlan.morphs;
+        var aClothingLayers = oExportPlan.clothing.reduce( function( r, s ) {
+            return r.concat( s.layers.reduce( function( u, v ) { return u.concat( v ); }, [] ) );
+        }, [] );
+        
+        var aLayers = aCharacterLayers.concat( aMorphsLayers ).concat( aClothingLayers );
+
+        for( var i=0; i<aLayers.length; i+=1 ) {
+            if( oExportPatterns.layers.test( aLayers[ i ] ) ) {
+                return oExportPlan; // at least one layer matched
+            }
+        }
+
+        print( "Skipping exportable: '%1' due to 'layers' pattern".arg( sName ) );
+        return null;
+    }
+
+    return oExportPlan;
 };
 
 /*********************************************************************/
@@ -615,10 +733,10 @@ Object.defineProperty( DthAutoToolExportPlan.prototype, "name", {
 
 Object.defineProperty( DthAutoToolExportPlan.prototype, "character", {
     get: function() {
-        if( !this._cachedCharacterLayerGroups ) {
-            this._cachedCharacterLayerGroups = this._characterLayerGroups.values().reduce( function( r, s ) { return r.concat( s.layers ); }, [] );
+        if( !this._cachedCharacterLayers ) {
+            this._cachedCharacterLayers = this._characterLayerGroups.values().reduce( function( r, s ) { return r.concat( s.layers ); }, [] );
         }
-        return this._cachedCharacterLayerGroups;
+        return this._cachedCharacterLayers;
     }
 } );
 
@@ -633,10 +751,10 @@ Object.defineProperty( DthAutoToolExportPlan.prototype, "clothing", {
 
 Object.defineProperty( DthAutoToolExportPlan.prototype, "morphs", {
     get: function() {
-        if( !this._cachedMorphsLayerGroups ) {
-            this._cachedMorphsLayerGroups = this._morphsLayerGroups.values().reduce( function( r, s ) { return r.concat( s.layers ); }, [] );
+        if( !this._cachedMorphsLayers ) {
+            this._cachedMorphsLayers = this._morphsLayerGroups.values().reduce( function( r, s ) { return r.concat( s.layers ); }, [] );
         }
-        return this._cachedMorphsLayerGroups;
+        return this._cachedMorphsLayers;
     }
 } );
 

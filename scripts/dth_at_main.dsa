@@ -102,8 +102,6 @@ function require( sName )
 {
 	var sPath = String( "%1/%2.dsa" ).arg( getScriptPath() ).arg( sName );
 
-	var sCurrentScript = getScriptFileName();
-
 	// Declare working variables
 	var sTitle, sMessage;
 
@@ -186,7 +184,7 @@ function module( sName, aScriptArgs )
 
 	separator();
 	execModuleLine = String( "Finished executing module [%1]" ).arg( sName );
-	print ( execModuleLine );
+	print( execModuleLine );
 	separator();
 };
 
