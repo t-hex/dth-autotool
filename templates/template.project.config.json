@@ -6,6 +6,7 @@
         "clothing_name": ""
     },
     "export_settings": {
+        "skip_base_model": false,
         "export_patterns": {
             "exportables": "",
             "templates": "",

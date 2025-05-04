@@ -113,6 +113,12 @@ function DthAutoToolExportConfig( oConfig ) {
     this.load( oConfig );
 }
 
+Object.defineProperty( DthAutoToolExportConfig.prototype, "skipBaseModel", {
+    get: function() {
+        return this._bSkipBaseModel;
+    }
+} );
+
 Object.defineProperty( DthAutoToolExportConfig.prototype, "exportPatterns", {
     get: function() {
         return this._oExportPatterns;
@@ -161,6 +167,8 @@ DthAutoToolExportConfig.prototype.load = function( oConfig ) {
     var sSaganAlembicExportDirectory= Cast.AsNotNullOrEmpty( oConfig.sagan_alembic_export_directory, "Directory path for Sagan Alembic Exporter output must be provided" );
     var sDazToMayaExportDirectory = Cast.AsNotNullOrEmpty( oConfig.daz_to_maya_export_directory, "Directory path for Daz To Maya Exporter output must be provided" );
     var sDefaultExportOutputDirectory = Cast.AsNotNullOrEmpty( oConfig.default_output_directory, "Directory path for default export output must be provided" );
+
+    this._bSkipBaseModel = oConfig.skip_base_model === true;
 
     this._oSaganAlembicExportDir = this._buildDirInfoFromPath( sSaganAlembicExportDirectory );
     this._oDazToMayaExportDir = this._buildDirInfoFromPath( sDazToMayaExportDirectory );

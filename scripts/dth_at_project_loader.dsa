@@ -54,14 +54,16 @@ function ExecuteSteps( aSteps ) {
 
             var oDthAutoToolExporter = new DthAutoToolExporter( oExportPlan, oDthAutoToolConfig.dthAutoToolConfig, oDthAutoToolConfig.exportSettings );
 
-            // export pure character without clothings first
-            if( !ExecuteSteps( [
-                function() { oDthAutoToolExporter.prepareScene(); },
-                function() { oDthAutoToolExporter.loadCharacter(); },
-                function() { oDthAutoToolExporter.loadMorphs(); },
-                function() { oDthAutoToolExporter.startExport(); },
-                function() { oDthAutoToolExporter.copyResult( sOutputName ); }
-            ] ) ) { break; }
+            if( !oDthAutoToolConfig.exportSettings.skipBaseModel ) {
+                // export base character without clothings
+                if( !ExecuteSteps( [
+                    function() { oDthAutoToolExporter.prepareScene(); },
+                    function() { oDthAutoToolExporter.loadCharacter(); },
+                    function() { oDthAutoToolExporter.loadMorphs(); },
+                    function() { oDthAutoToolExporter.startExport(); },
+                    function() { oDthAutoToolExporter.copyResult( sOutputName ); }
+                ] ) ) { break; }
+            }
 
             // if clothings defined export character with each clothing
             var aClothingKeys = oDthAutoToolExporter.clothings;
