@@ -37,20 +37,29 @@ function ExecuteSteps( aSteps ) {
         oDthAutoToolExporter.loadMorphs();
     } else {
         var aExportableKeys = oDthAutoToolConfig.exportables.keys();
-
-        startProgress( text( "DTH-AutoTool export progress" ), aExportableKeys.length, true, true );
-        processEvents();
+        var aExportPlans = []
+        var iTotalExportSteps = 0;
 
         for( var i=0; i<aExportableKeys.length; i+=1 )
         {
-            App.statusLine( aExportableKeys[ i ] );
-
-            print( "Loading exportable: \"%1\"".arg( aExportableKeys[ i ] ) );
-
             var oExportable = oDthAutoToolConfig.exportables.get( aExportableKeys[ i ] );
             var oExportPlan = oDthAutoToolConfig.build( oExportable.name );
             if( !oExportPlan ) { continue; }
+            aExportPlans.push( oExportPlan );
+
+            if( !oDthAutoToolConfig.exportSettings.skipBaseModel ) { iTotalExportSteps += 1; }
+            iTotalExportSteps += oExportPlan.clothing.length;
+        }
+
+        startProgress( text( "DTH-AutoTool export progress" ), iTotalExportSteps, true, true );
+        processEvents();
+
+        for( var i=0; i<aExportPlans.length; i+=1 )
+        {
+            var oExportPlan = aExportPlans[ i ];
+
             var sOutputName = oExportPlan.name
+            App.statusLine( sOutputName );
 
             var oDthAutoToolExporter = new DthAutoToolExporter( oExportPlan, oDthAutoToolConfig.dthAutoToolConfig, oDthAutoToolConfig.exportSettings );
 
@@ -63,6 +72,8 @@ function ExecuteSteps( aSteps ) {
                     function() { oDthAutoToolExporter.startExport(); },
                     function() { oDthAutoToolExporter.copyResult( sOutputName ); }
                 ] ) ) { break; }
+                
+                stepProgress( 1 );
             }
 
             // if clothings defined export character with each clothing
