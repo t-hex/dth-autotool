@@ -9,6 +9,12 @@ This repository is still work in progress and mostly reflects my personal workfl
 # Download the latest build
 If you want to avoid headaches of manual compilation. Pre-compiled application with scripts can be downloaded [here](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
 
+#### Tested with
+- DAZ Studio 4.23.0.1
+- Sagan Alembic Exporter (plugin) 3.6.1.0
+- Daz To Maya Bridge (plugin) 2024.2.3.32
+- Tesseract OCR engine 5.5.0
+
 # Build demo example app
 - Download installation script and example config folder from the _example_ repository folder.
 - Open windows powershell window and enter the location on your local computer.
@@ -60,6 +66,18 @@ It is highly recommended to install `tesseract` app when using `visual-lookup` m
 - If you need to load only the layers without export being triggered, use `edit_mode` configuration section.
 - Set `is_enabled` to `true` and specify `exportable_name` to valid value.
 - If `exportable` has clothing layers, you can also specify `clothing_name` to load.
+
+### Export filter patterns
+Can be used to narrow down list of exportables and clothings to export (for example if you change only some of them and need to re-export again).
+All export patterns are part of `export_patterns` configuration under `export_settings`.
+Export patterns are interpreted as ECMAScript regular expressions to support more complex filtering if needed.
+You can use [regex101.com] to test your regular expression (make sure you are using ECMAScript flavor).
+**Empty** or missing regexp patterns are ignored (skipped).
+
+- `exportables`: filters by exportable names.
+- `templates`: filters by template names.
+- `layers`: filters by layer values (e.g. `duf` files) across all exportables/templates. Only exportables with matched layer values will be entirely exported.
+- `clothing`: this filter pattern can be used to export only matched clothings.
 
 # How to compile
 This project depends on [robotgo](https://github.com/go-vgo/robotgo) and [gocv](https://github.com/vcaesar/gcv) libraries.
