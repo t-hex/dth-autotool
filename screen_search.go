@@ -308,8 +308,14 @@ SearchPatternLoop:
 			},
 		}
 
-		screenCaptureImg, err := robotgo.CaptureImg(screenCaptureArea.Offset.X, screenCaptureArea.Offset.Y, screenCaptureArea.Size.W, screenCaptureArea.Size.H)
-		//_ = robotgo.SaveCapture(".debug.png", screenCaptureArea.Offset.X, screenCaptureArea.Offset.Y, screenCaptureArea.Size.W, screenCaptureArea.Size.H)
+		safeguardBorder := CalculateSafeguardBorder(patternImages, screenCaptureArea)
+
+		screenCaptureImg, err := robotgo.CaptureImg(
+			screenCaptureArea.Offset.X-safeguardBorder.W,
+			screenCaptureArea.Offset.Y-safeguardBorder.H,
+			screenCaptureArea.Size.W+safeguardBorder.W,
+			screenCaptureArea.Size.H+safeguardBorder.H)
+		//_ = robotgo.Save(screenCaptureImg, ".debug.png") // debug only
 		if err != nil {
 			return nil, err
 		}
@@ -317,6 +323,9 @@ SearchPatternLoop:
 		var unorderedPotentialMatches [][]gcv.Result
 		const threshold = 0.75
 
+		//for index, patternImage := range patternImages {
+		//	_ = robotgo.Save(patternImage, fmt.Sprintf(".debug.png-%d.png", index)) // debug only
+		//}
 		if config.GrayScalePatternsEnabled {
 			unorderedPotentialMatches = gcv.FindMultiAllImg(
 				ConvertToGrayscaleAll(patternImages, config.GrayScalePatternsLuminanceLevels),
@@ -411,6 +420,30 @@ SearchPatternLoop:
 		return searchResults, err
 	}
 	return []ScreenPositionSearchResult{searchResult}, nil // final successful search
+}
+
+func CalculateSafeguardBorder(patternImages []image.Image, screenCaptureArea ScreenArea) Dimensions {
+	var patternImageMaxDimension Dimensions
+
+	for _, patternImage := range patternImages {
+		if patternImage.Bounds().Dx() > patternImageMaxDimension.W {
+			patternImageMaxDimension.W = patternImage.Bounds().Dx()
+		}
+		if patternImage.Bounds().Dy() > patternImageMaxDimension.H {
+			patternImageMaxDimension.H = patternImage.Bounds().Dy()
+		}
+	}
+
+	var safeguardBorder Dimensions
+
+	if screenCaptureArea.Size.W <= patternImageMaxDimension.W {
+		safeguardBorder.W = (patternImageMaxDimension.W-screenCaptureArea.Size.W)/2 + 1
+	}
+	if screenCaptureArea.Size.H <= patternImageMaxDimension.H {
+		safeguardBorder.H = (patternImageMaxDimension.H-screenCaptureArea.Size.H)/2 + 1
+	}
+
+	return safeguardBorder
 }
 
 func ConvertToGrayscale(img image.Image, luminanceLevels uint8) image.Image {

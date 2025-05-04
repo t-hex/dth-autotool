@@ -101,7 +101,7 @@ func (o SaganAlembicExportDialogHandler) StepSelectSaganAlembicExportConfig(
 
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/common/win_dlg_filename_lbl.png"}},
+				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/common/win10_dlg_filename_lbl.png"}},
 			},
 			PostCaptureAlignment: Right,
 			PostCaptureOffset:    Coordinates{20, 0},
@@ -120,9 +120,12 @@ func (o SaganAlembicExportDialogHandler) StepSelectSaganAlembicExportConfig(
 		position, err = ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
 				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/win_dlg_open_cancel_btn_grp.png",
-					o.cfg.ImgPatternsPath + "/common/win_dlg_open_cancel_btn_grp_open_highlighted.png",
-					o.cfg.ImgPatternsPath + "/common/win_dlg_open_cancel_btn_grp_cancel_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/win10_dlg_open_cancel_btn_grp.png",
+					o.cfg.ImgPatternsPath + "/common/win11_dlg_open_cancel_btn_grp.png",
+					o.cfg.ImgPatternsPath + "/common/win10_dlg_open_cancel_btn_grp_open_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/win11_dlg_open_cancel_btn_grp_open_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/win10_dlg_open_cancel_btn_grp_cancel_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/win11_dlg_open_cancel_btn_grp_cancel_highlighted.png",
 				}},
 			},
 			PostCaptureAlignment: TopLeft,
@@ -130,8 +133,10 @@ func (o SaganAlembicExportDialogHandler) StepSelectSaganAlembicExportConfig(
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
 				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/win_dlg_open_btn.png",
-					o.cfg.ImgPatternsPath + "/common/win_dlg_open_btn_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/win10_dlg_open_btn.png",
+					o.cfg.ImgPatternsPath + "/common/win11_dlg_open_btn.png",
+					o.cfg.ImgPatternsPath + "/common/win10_dlg_open_btn_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/win11_dlg_open_btn_highlighted.png",
 				}, ValidationText: "Open"},
 			},
 			PostCaptureAlignment: Center,
@@ -242,21 +247,12 @@ func (o SaganAlembicExportDialogHandler) StepAcceptSaganAlembicExport(
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
 				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/sagan_alembic_exporter_dialog/export_done_btn_grp.png",
-					o.cfg.ImgPatternsPath + "/sagan_alembic_exporter_dialog/export_done_btn_grp_export_highlighted.png",
-					o.cfg.ImgPatternsPath + "/sagan_alembic_exporter_dialog/export_done_btn_grp_done_highlighted.png",
-				}},
-			},
-			PostCaptureAlignment: TopLeft,
-			BoundingCornerOffset: dzSaganAlembicExportWinInfo.Size,
-		}, {
-			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
 					o.cfg.ImgPatternsPath + "/common/export_btn.png",
 					o.cfg.ImgPatternsPath + "/common/export_btn_highlighted.png"},
 					ValidationText: "Export"},
 			},
 			PostCaptureAlignment: Center,
+			BoundingCornerOffset: dzSaganAlembicExportWinInfo.Size,
 		}}, dzSaganAlembicExportWinInfo.Position, o.cfg.ScreenSearchValidation)
 		if err != nil {
 			return err
@@ -275,7 +271,7 @@ func (o SaganAlembicExportDialogHandler) StepAcceptSaganAlembicExport(
 func (o SaganAlembicExportDialogHandler) StepCloseSaganAlembicExportDialog(
 	method HandlingMethodCode,
 	dzSaganAlembicExportWinInfo WinOnScreenInfo) error {
-	o.logger.Info(fmt.Sprintf("Starting 'Sagan Alembic Export' process"))
+	o.logger.Info(fmt.Sprintf("Closing 'Sagan Alembic Export' process dialog"))
 
 	switch method {
 	case HandlingMethodKeySequencing:
@@ -293,21 +289,12 @@ func (o SaganAlembicExportDialogHandler) StepCloseSaganAlembicExportDialog(
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
 				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/sagan_alembic_exporter_dialog/export_done_btn_grp.png",
-					o.cfg.ImgPatternsPath + "/sagan_alembic_exporter_dialog/export_done_btn_grp_export_highlighted.png",
-					o.cfg.ImgPatternsPath + "/sagan_alembic_exporter_dialog/export_done_btn_grp_done_highlighted.png",
-				}},
-			},
-			PostCaptureAlignment: TopLeft,
-			BoundingCornerOffset: dzSaganAlembicExportWinInfo.Size,
-		}, {
-			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
 					o.cfg.ImgPatternsPath + "/common/done_btn.png",
 					o.cfg.ImgPatternsPath + "/common/done_btn_highlighted.png"},
 					ValidationText: "Done"},
 			},
 			PostCaptureAlignment: Center,
+			BoundingCornerOffset: dzSaganAlembicExportWinInfo.Size,
 		}}, dzSaganAlembicExportWinInfo.Position, o.cfg.ScreenSearchValidation)
 		if err != nil {
 			return err

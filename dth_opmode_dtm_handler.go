@@ -291,7 +291,10 @@ func (o DazToMayaExportDialogHandler) StepAcceptSubdivisionsDialog(
 				{ImageFilePaths: []string{
 					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp.png",
 					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_highlighted.png",
+					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_hover_highlighted.png",
 					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_highlighted.png",
+					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_hover_highlighted.png",
+					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_hover_highlighted.png",
 				}},
 			},
 			PostCaptureAlignment: TopLeft,
@@ -334,12 +337,17 @@ func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 			return err
 		}
 	case HandlingMethodVisualLookup:
+		robotgo.Move(robotgo.GetScreenSize()) // move cursor out of the way
+
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
 				{ImageFilePaths: []string{
 					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp.png",
 					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_highlighted.png",
+					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_hover_highlighted.png",
 					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_highlighted.png",
+					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_hover_highlighted.png",
+					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_hover_highlighted.png",
 				}},
 			},
 			PostCaptureAlignment: TopLeft,
@@ -348,7 +356,8 @@ func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 			Patterns: []ScreenSearchImgReferencePattern{
 				{ImageFilePaths: []string{
 					o.cfg.ImgPatternsPath + "/common/accept_btn.png",
-					o.cfg.ImgPatternsPath + "/common/accept_btn_highlighted.png"}, ValidationText: "Accept"},
+					o.cfg.ImgPatternsPath + "/common/accept_btn_highlighted.png",
+					o.cfg.ImgPatternsPath + "/common/accept_btn_hover_highlighted.png"}, ValidationText: "Accept"},
 			},
 			PostCaptureAlignment: Center,
 		}}, dzToMayaExportWinInfo.Position, o.cfg.ScreenSearchValidation)
