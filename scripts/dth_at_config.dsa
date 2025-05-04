@@ -620,6 +620,9 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
     Assert.NotNullOrEmpty( sName, "Invalid exportable name to build" );
 
     var oExportPatterns = this.exportSettings.exportPatterns;
+    // filter patterns should be used only if not in edit mode
+    // in edit mode we should provide exactly what user requested
+    var bNotInEditMode = !this.editMode.isEnabled;
 
     var oExportable = this.exportables.get( sName );
     if( !oExportable ) {
@@ -627,7 +630,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
     }
 
     // filter by Exportable name
-    if( oExportPatterns.exportables && !oExportPatterns.exportables.test( sName ) ) {
+    if( bNotInEditMode && oExportPatterns.exportables && !oExportPatterns.exportables.test( sName ) ) {
         print( "Skipping exportable: '%1' due to 'exportables' pattern".arg( sName ) );
         return null;
     }
@@ -651,13 +654,13 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
 
         // filter by Template name
         var bHasMatchedTemplate = true; // only relevant if export pattern specified
-        if( oExportPatterns.templates ) { bHasMatchedTemplate = false; }
+        if( bNotInEditMode && oExportPatterns.templates ) { bHasMatchedTemplate = false; }
 
         for( var t=0; t<oExportable.templates.length; t+=1 ) {
             var sTemplate = oExportable.templates[ t ];
 
             // test pattern only until first match is found
-            if( !bHasMatchedTemplate && oExportPatterns.templates.test( sTemplate ) ) { bHasMatchedTemplate = true; }
+            if( bNotInEditMode && !bHasMatchedTemplate && oExportPatterns.templates.test( sTemplate ) ) { bHasMatchedTemplate = true; }
 
             var oBaseTemplate = this.baseTemplates.get( sTemplate );
             if( !oBaseTemplate ) {
@@ -666,7 +669,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
             mExpLayerGroups.union( oBaseTemplate[ sBasePropName ], "back" );
         }
 
-        if( !bHasMatchedTemplate ) {
+        if( bNotInEditMode && !bHasMatchedTemplate ) {
             print( "Skipping exportable: '%1' due to 'templates' pattern".arg( sName ) );
             return null;
         }
@@ -691,7 +694,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
 
     // filter clothings by Clothing pattern
     var mClothingLayerGroupsToExport = mProperties.get( "clothing" );
-    if( oExportPatterns.clothing && !oExportPatterns.clothing !== "" ) {
+    if( bNotInEditMode && oExportPatterns.clothing && !oExportPatterns.clothing !== "" ) {
         var aClothingLayerGroupsKeys = mClothingLayerGroupsToExport.keys();
         for( var i=0; i<aClothingLayerGroupsKeys.length; i+=1 ) {
             if( !oExportPatterns.clothing.test( aClothingLayerGroupsKeys[ i ] ) ) {
@@ -704,7 +707,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
     var oExportPlan = new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mClothingLayerGroupsToExport, mProperties.get( "morphs" ) );
 
     // filter by Layer (duf file or asset) name
-    if( oExportPatterns.layers && !oExportPatterns.layers !== "" ) {
+    if( bNotInEditMode && oExportPatterns.layers && !oExportPatterns.layers !== "" ) {
         // merge all layers together for pattern matching purposes
         var aCharacterLayers = oExportPlan.character;
         var aMorphsLayers = oExportPlan.morphs;
