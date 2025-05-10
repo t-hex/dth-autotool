@@ -10,9 +10,9 @@ This repository is still work in progress and mostly reflects my personal workfl
 If you want to avoid headaches of manual compilation. Pre-compiled application with scripts can be downloaded [here](https://e.pcloud.link/publink/show?code=kZNiwlZYdusX3O8qqFgLVS94a7KU8nxj4Sk).
 
 #### Tested with
-- DAZ Studio 4.23.0.1
+- DAZ Studio 4.24.0.3
 - Sagan Alembic Exporter (plugin) 3.6.1.0
-- Daz To Maya Bridge (plugin) 2024.2.3.32
+- Daz To Maya Bridge (plugin) 2024.2.4.40
 - Tesseract OCR engine 5.5.0
 
 # Build demo example app
