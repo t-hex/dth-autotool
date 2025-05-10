@@ -7,7 +7,7 @@ var DzHelpers = {
 			throw new Error( "Failed to retrieve pane manager to show the pane: %1".arg( sPaneName ) );
 		}
         var oPane = oPaneMgr.findPane( sPaneName );
-		if( oPane ) {
+		if( !oPane ) {
 			throw new Error( "Pane instance \"%1\" does not exist".arg( sPaneName ) );
 		}
 		oPaneMgr.showPane( oPane );
