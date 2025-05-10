@@ -35,6 +35,8 @@ function ExecuteSteps( aSteps ) {
             oDthAutoToolExporter.loadClothing( oDthAutoToolConfig.editMode.clothingName );
         }
         oDthAutoToolExporter.loadMorphs();
+        
+        DzHelpers.ShowPane( "DzViewportMgrPane" );
     } else {
         var aExportableKeys = oDthAutoToolConfig.exportables.keys();
         var aExportPlans = []

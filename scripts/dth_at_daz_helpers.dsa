@@ -1,6 +1,18 @@
 /*********************************************************************/
 // Daz Studio helpers/extensions
 var DzHelpers = {
+	ShowPane: function( sPaneName ) {
+		var oPaneMgr = App.getInterface().getPaneMgr();
+		if( !oPaneMgr ) {
+			throw new Error( "Failed to retrieve pane manager to show the pane: %1".arg( sPaneName ) );
+		}
+        var oPane = oPaneMgr.findPane( sPaneName );
+		if( oPane ) {
+			throw new Error( "Pane instance \"%1\" does not exist".arg( sPaneName ) );
+		}
+		oPaneMgr.showPane( oPane );
+	},
+
     GetAction: function( actionText ) {
 		var oActionMgr = MainWindow.getActionMgr();
 
