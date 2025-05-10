@@ -63,13 +63,6 @@ const (
 	Right
 )
 
-type ScreenSearchImgReferencePattern struct {
-	ImageFilePaths []string
-	ValidationText string
-	Psm            TesseractPSM
-	Language       TesseractLang
-}
-
 type ScreenPositionSearchDefinition struct {
 	Patterns             []ScreenSearchImgReferencePattern // Reference patterns to search for in CaptureArea
 	BoundingCornerOffset Dimensions                        // Offset applied to the starting coordinates to define rectangular search area
@@ -269,7 +262,6 @@ func ScreenPositionSearchImpl(
 ) ([]ScreenPositionSearchResult, error) {
 	defer func() {
 		_ = os.Remove(".t.png")
-		_ = os.Remove(".debug.png")
 	}()
 
 	if len(searchDefinitionStack) == 0 {
@@ -315,7 +307,7 @@ SearchPatternLoop:
 			screenCaptureArea.Offset.Y-safeguardBorder.H,
 			screenCaptureArea.Size.W+safeguardBorder.W,
 			screenCaptureArea.Size.H+safeguardBorder.H)
-		//_ = robotgo.Save(screenCaptureImg, ".debug.png") // debug only
+
 		if err != nil {
 			return nil, err
 		}
@@ -323,15 +315,22 @@ SearchPatternLoop:
 		var unorderedPotentialMatches [][]gcv.Result
 		const threshold = 0.75
 
-		//for index, patternImage := range patternImages {
-		//	_ = robotgo.Save(patternImage, fmt.Sprintf(".debug.png-%d.png", index)) // debug only
-		//}
 		if config.GrayScalePatternsEnabled {
+			//_ = robotgo.Save(ConvertToGrayscale(screenCaptureImg, config.GrayScalePatternsLuminanceLevels),
+			//	".gs.capture.debug.png") // debug only
+			//for index, patternImage := range ConvertToGrayscaleAll(patternImages, config.GrayScalePatternsLuminanceLevels) {
+			//	_ = robotgo.Save(patternImage,
+			//		fmt.Sprintf(".gs.pattern.debug-%d.png", index)) // debug only
+			//}
 			unorderedPotentialMatches = gcv.FindMultiAllImg(
 				ConvertToGrayscaleAll(patternImages, config.GrayScalePatternsLuminanceLevels),
 				ConvertToGrayscale(screenCaptureImg, config.GrayScalePatternsLuminanceLevels),
 				threshold)
 		} else {
+			//_ = robotgo.Save(screenCaptureImg, ".capture.debug.png") // debug only
+			//for index, patternImage := range patternImages {
+			//	_ = robotgo.Save(patternImage, fmt.Sprintf(".pattern.debug-%d.png", index)) // debug only
+			//}
 			unorderedPotentialMatches = gcv.FindMultiAllImg(
 				patternImages,
 				screenCaptureImg,

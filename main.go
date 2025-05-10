@@ -103,7 +103,7 @@ func main() {
 			PatternMaxRetryAttempts:          3,
 			PatternRetryAttemptDelayMs:       500,
 			GrayScalePatternsEnabled:         true,
-			GrayScalePatternsLuminanceLevels: 5,
+			GrayScalePatternsLuminanceLevels: 2,
 			TesseractValidation: TesseractValidationConfig{
 				Enabled:       IsTesseractAvailable(),
 				TesseractPSM:  TesseractPsm_SingleWord,

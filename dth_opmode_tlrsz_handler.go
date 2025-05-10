@@ -44,20 +44,13 @@ func (o TimelineResizeDialogHandler) StepConfirmResizeTimeline(
 
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/timeline_resize_dialog/yes_no_btn_grp.png",
-					o.cfg.ImgPatternsPath + "/timeline_resize_dialog/yes_no_btn_grp_yes_highlighted.png",
-					o.cfg.ImgPatternsPath + "/timeline_resize_dialog/yes_no_btn_grp_no_highlighted.png",
-				}},
+				*NewSSIRP(RefPattern_TlrsHandler_YesNoBtnGrp, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzTimelineResizeWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/yes_btn.png",
-					o.cfg.ImgPatternsPath + "/common/yes_btn_highlighted.png"},
-					ValidationText: "Yes"},
+				*NewSSIRP(RefPattern_CommonHandler_YesBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 		}}, dzTimelineResizeWinInfo.Position, o.cfg.ScreenSearchValidation)

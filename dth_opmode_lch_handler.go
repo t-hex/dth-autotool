@@ -65,18 +65,13 @@ func (o LoadCharacterDialogHandler) StepApplyCharacterToCurrentSelection(
 
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/load_character_dialog/apply_to_selected_radio_btn_off.png",
-					o.cfg.ImgPatternsPath + "/load_character_dialog/apply_to_selected_radio_btn_on.png",
-				}},
+				*NewSSIRP(RefPattern_LchHandler_ApplyToSelectedRadioBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzLoadCharacterOptionsWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/radio_btn_off.png",
-					o.cfg.ImgPatternsPath + "/common/radio_btn_on.png"}},
+				*NewSSIRP(RefPattern_CommonHandler_RadioBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 		}}, dzLoadCharacterOptionsWinInfo.Position, o.cfg.ScreenSearchValidation)
@@ -116,10 +111,7 @@ func (o LoadCharacterDialogHandler) StepAcceptCharacterLoadingOptions(
 
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/accept_btn.png",
-					o.cfg.ImgPatternsPath + "/common/accept_btn_highlighted.png",
-				}, ValidationText: "Accept"},
+				*NewSSIRP(RefPattern_CommonHandler_AcceptBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 			BoundingCornerOffset: dzLoadCharacterOptionsWinInfo.Size,

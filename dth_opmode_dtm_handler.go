@@ -48,13 +48,13 @@ func (o DazToMayaExportDialogHandler) StepSetAssetName(
 
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/main_export_options_grp.png"}},
+				*NewSSIRP(RefPattern_DtmHandler_MainExportOptionsGrp, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzToMayaExpWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/asset_name_lbl.png"}, ValidationText: "Asset Name"},
+				*NewSSIRP(RefPattern_DtmHandler_AssetNameLbl, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Right,
 			PostCaptureOffset:    Coordinates{10, 0},
@@ -91,15 +91,17 @@ func (o DazToMayaExportDialogHandler) StepSetAssetType(
 			return err
 		}
 	case HandlingMethodVisualLookup:
+		robotgo.Move(robotgo.GetScreenSize()) // move cursor out of the way
+
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/main_export_options_grp.png"}},
+				*NewSSIRP(RefPattern_DtmHandler_MainExportOptionsGrp, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzToMayaExpWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/asset_type_lbl.png"}, ValidationText: "Asset Type"},
+				*NewSSIRP(RefPattern_DtmHandler_AssetTypeLbl, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Right,
 			PostCaptureOffset:    Coordinates{10, 0},
@@ -147,18 +149,17 @@ func (o DazToMayaExportDialogHandler) StepOpenSubdivisionsDialog(
 			return err
 		}
 	case HandlingMethodVisualLookup:
+		robotgo.Move(robotgo.GetScreenSize()) // move cursor out of the way
+
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/main_export_options_grp.png"}},
+				*NewSSIRP(RefPattern_DtmHandler_MainExportOptionsGrp, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzToMayaExpWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/bake_subd_levels_btn.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/bake_subd_levels_btn_highlighted.png",
-				}, ValidationText: "Bake Subdivision Levels"},
+				*NewSSIRP(RefPattern_DtmHandler_SubdLevelsBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 		}}, dzToMayaExpWinInfo.Position, o.cfg.ScreenSearchValidation)
@@ -210,7 +211,7 @@ func (o DazToMayaExportDialogHandler) StepSetSubdivisionLevels(
 		// focus to the top drop-down
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/subd_levels_grp_top.png"}},
+				*NewSSIRP(RefPattern_DtmHandler_SubdLevelsGrpTop, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: BottomRight,
 			BoundingCornerOffset: dzSubdivisionWinInfo.Size,
@@ -230,7 +231,7 @@ func (o DazToMayaExportDialogHandler) StepSetSubdivisionLevels(
 		// iterate over all drop-downs and set subdivision levels to 1
 		witBtnSearchTraces, err := ScreenPositionSearchTrace([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/common/what_is_this_btn.png"}},
+				*NewSSIRP(RefPattern_DtmHandler_WhatIsThisBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzSubdivisionWinInfo.Size,
@@ -286,24 +287,17 @@ func (o DazToMayaExportDialogHandler) StepAcceptSubdivisionsDialog(
 			return err
 		}
 	case HandlingMethodVisualLookup:
+		robotgo.Move(robotgo.GetScreenSize()) // move cursor out of the way
+
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_hover_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_hover_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_hover_highlighted.png",
-				}},
+				*NewSSIRP(RefPattern_DtmHandler_AcceptCancelBtnGrp, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzSubdivisionWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/accept_btn.png",
-					o.cfg.ImgPatternsPath + "/common/accept_btn_highlighted.png"}, ValidationText: "Accept"},
+				*NewSSIRP(RefPattern_CommonHandler_AcceptBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 		}}, dzSubdivisionWinInfo.Position, o.cfg.ScreenSearchValidation)
@@ -341,23 +335,13 @@ func (o DazToMayaExportDialogHandler) StepAcceptDazToMayaExportDialog(
 
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_accept_hover_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_cancel_hover_highlighted.png",
-					o.cfg.ImgPatternsPath + "/daz_to_maya_dialog/accept_cancel_btn_grp_hover_highlighted.png",
-				}},
+				*NewSSIRP(RefPattern_DtmHandler_AcceptCancelBtnGrp, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: TopLeft,
 			BoundingCornerOffset: dzToMayaExportWinInfo.Size,
 		}, {
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/accept_btn.png",
-					o.cfg.ImgPatternsPath + "/common/accept_btn_highlighted.png",
-					o.cfg.ImgPatternsPath + "/common/accept_btn_hover_highlighted.png"}, ValidationText: "Accept"},
+				*NewSSIRP(RefPattern_CommonHandler_AcceptBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 		}}, dzToMayaExportWinInfo.Position, o.cfg.ScreenSearchValidation)
@@ -391,9 +375,11 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportFinishedDialog(
 			return err
 		}
 	case HandlingMethodVisualLookup:
+		robotgo.Move(robotgo.GetScreenSize()) // move cursor out of the way
+
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{o.cfg.ImgPatternsPath + "/common/ok_btn_highlighted.png"}, ValidationText: "OK"},
+				*NewSSIRP(RefPattern_CommonHandler_OkBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 			BoundingCornerOffset: dzToMayaExportFinishedWinInfo.Size,
@@ -426,12 +412,11 @@ func (o DazToMayaExportDialogHandler) StepAcceptExportObjectBakingDialog(
 			return err
 		}
 	case HandlingMethodVisualLookup:
+		robotgo.Move(robotgo.GetScreenSize()) // move cursor out of the way
+
 		position, err := ScreenPositionSearch([]ScreenPositionSearchDefinition{{
 			Patterns: []ScreenSearchImgReferencePattern{
-				{ImageFilePaths: []string{
-					o.cfg.ImgPatternsPath + "/common/yes_btn.png",
-					o.cfg.ImgPatternsPath + "/common/yes_btn_highlighted.png",
-				}, ValidationText: "Yes"},
+				*NewSSIRP(RefPattern_CommonHandler_YesBtn, o.cfg.ImgPatternsPath),
 			},
 			PostCaptureAlignment: Center,
 			BoundingCornerOffset: dzToMayaExportObjectBakingWinInfo.Size,
