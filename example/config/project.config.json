@@ -6,7 +6,13 @@
         "clothing_name": ""
     },
     "export_settings": {
-        "tags": ["not-yet-supported"],
+        "skip_base_model": false,
+        "export_patterns": {
+            "exportables": "",
+            "templates": "",
+            "clothing": "",
+            "layers": ""
+        },
         "sagan_alembic_export_directory": "../temp/abc",
         "daz_to_maya_export_directory": "../temp/fbx",
         "default_output_directory": "../exports"
