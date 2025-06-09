@@ -11,6 +11,7 @@ var DzHelpers = {
 			throw new Error( "Pane instance \"%1\" does not exist".arg( sPaneName ) );
 		}
 		oPaneMgr.showPane( oPane );
+		processEvents();
 	},
 
     GetAction: function( actionText ) {
