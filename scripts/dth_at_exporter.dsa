@@ -292,19 +292,31 @@ DthAutoToolExporter.prototype.loadMorphs = function() {
     Scene.setFrame( 0 );
     Scene.setDefaultKeyInterpolationType( DzProperty.InterpLinear );
     // memorize figure at frame zero - the rest-pose, so we can restore it on new frames
-    DzHelpers.GetAction( "Memorize Figure" ).trigger();
+    var oMemorizeFigureAction = DzHelpers.GetAction( "Memorize Figure" );
     var oRestoreFigureAction = DzHelpers.GetAction(  "Restore Figure" );
 
     var oContentMgr = App.getContentMgr();
 
     var nPreviousEndFrame = 0;
+    var nNextAssetStartFrame = 0;
     for( var c=0; c<this._aMorphsAssets.length; c+=1 ) {
         if( c > 0 ) {
             nPreviousEndFrame = DzHelpers.GetPlayRangeEndFrame();
-            var nNextAssetStartFrame = nPreviousEndFrame + 1;
+            nNextAssetStartFrame = nPreviousEndFrame + 1;
             DzHelpers.ResizePlayRange( 0, nNextAssetStartFrame );
+            
+            // set the default pose on the next asset start frame
+            Scene.setFrame( 0 );
+            oMemorizeFigureAction.trigger();
             Scene.setFrame( nNextAssetStartFrame );
             oRestoreFigureAction.trigger();
+
+            // memorize previous end frame pose & shaping to restore it back after loading
+            // the new asset (DAZ sometimes apply new morph also to preceding frames)
+            Scene.setFrame( nPreviousEndFrame );
+            oMemorizeFigureAction.trigger();
+
+            Scene.setFrame( nNextAssetStartFrame );
         }
 
         var oMorphAsset = this._aMorphsAssets[ c ];
@@ -314,6 +326,14 @@ DthAutoToolExporter.prototype.loadMorphs = function() {
         }
         // In DTH workflow, morphs are exported as animation timeline frames (e.g. JCM, facial expr.,...)
         this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.LoadAnimation, callback, false, null );
+
+        if( c > 0 ) {
+            // restore memorized pose & shaping back on previous end frame
+            print( "Restoring at: " + nPreviousEndFrame );
+            Scene.setFrame( nPreviousEndFrame );
+            oRestoreFigureAction.trigger();
+            Scene.setFrame( DzHelpers.GetPlayRangeEndFrame() );
+        }
     }
 
     // jump back to start after all assets loaded
