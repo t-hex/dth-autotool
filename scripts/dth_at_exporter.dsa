@@ -329,7 +329,6 @@ DthAutoToolExporter.prototype.loadMorphs = function() {
 
         if( c > 0 ) {
             // restore memorized pose & shaping back on previous end frame
-            print( "Restoring at: " + nPreviousEndFrame );
             Scene.setFrame( nPreviousEndFrame );
             oRestoreFigureAction.trigger();
             Scene.setFrame( DzHelpers.GetPlayRangeEndFrame() );
