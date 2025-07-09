@@ -182,7 +182,7 @@ DthAutoToolExporter.prototype.init = function( oExportPlan, oDthAutoToolConfig, 
     this._aMorphsAssets = [];
     this._nCurrentClothingIndex = -1;
     this._mClothingAssets = new OrderedKeyValueSet();
-    this._mClothingAssets = new OrderedKeyValueSet();
+    this._mGroomingAssets = new OrderedKeyValueSet();
 
     var oLibBrowser = new DthAutoToolLibraryBrowser();
 
@@ -389,7 +389,7 @@ DthAutoToolExporter.prototype.loadClothing = function( sClothing ) {
 
 /*********************************************************************/
 // Function to check if exportable contains clothing layer group with given name
-DthAutoToolExporter.prototype.loadGrooming = function( sGrooming ) {
+DthAutoToolExporter.prototype.loadGrooming = function( sGrooming, bHideCharacter ) {
     print( "Loading grooming layers \"%1\" for exportable \"%2\"".arg( sGrooming ).arg( this.exportableName ) );
 
     if( !this._oPrimaryFigure ) {
@@ -402,10 +402,12 @@ DthAutoToolExporter.prototype.loadGrooming = function( sGrooming ) {
     }
     var aGroomingAssets = this._mGroomingAssets.get( sGrooming );
 
-    // setup invisibility on all nodes before loading groom layers
-    var aNonGroomNodes = Scene.getNodeList();
-    for( var i=0; i<aNonGroomNodes.length; i+=1 ) {
-        aNonGroomNodes[ i ].setVisible( false );
+    // setup invisibility on all nodes before loading groom layers when exporting
+    if( bHideCharacter ) {
+        var aNonGroomNodes = Scene.getNodeList();
+        for( var i=0; i<aNonGroomNodes.length; i+=1 ) {
+            aNonGroomNodes[ i ].setVisible( false );
+        }
     }
 
     var oContentMgr = App.getContentMgr();

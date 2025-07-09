@@ -59,7 +59,7 @@ DthAutoToolEditModeConfig.prototype.load = function( oConfig ) {
     }
 
     if( oConfig.grooming_name ) {
-        this._sGroomingName = oConfig.grooming_name
+        this._sGroomingName = oConfig.grooming_name;
         this._bWithGrooming = true;
     }
 
@@ -755,7 +755,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
 
     // filter groomings by Grooming pattern
     var mGroomingLayerGroupsToExport = mProperties.get( "grooming" );
-    if( bNotInEditMode && oExportPatterns.clothing && !oExportPatterns.clothing !== "" ) {
+    if( bNotInEditMode && oExportPatterns.grooming && !oExportPatterns.grooming !== "" ) {
         var aGroomingLayerGroupsKeys = mGroomingLayerGroupsToExport.keys();
         for( var i=0; i<aGroomingLayerGroupsKeys.length; i+=1 ) {
             if( !oExportPatterns.grooming.test( aGroomingLayerGroupsKeys[ i ] ) ) {
@@ -796,8 +796,8 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
 
 /*********************************************************************/
 // DthAutoToolExportable constructor
-function DthAutoToolExportPlan( sName, mCharacter, mClothing, mMorphs ) {
-    this.load( sName, mCharacter, mClothing, mMorphs );
+function DthAutoToolExportPlan( sName, mCharacter, mClothing, mGrooming, mMorphs ) {
+    this.load( sName, mCharacter, mClothing, mGrooming, mMorphs );
 }
 
 Object.defineProperty( DthAutoToolExportPlan.prototype, "name", {

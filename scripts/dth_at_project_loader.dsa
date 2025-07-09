@@ -36,7 +36,7 @@ function ExecuteSteps( aSteps ) {
         }
         if( oDthAutoToolConfig.editMode.withGrooming )
         {
-            oDthAutoToolExporter.loadGrooming( oDthAutoToolConfig.editMode.groomingName );
+            oDthAutoToolExporter.loadGrooming( oDthAutoToolConfig.editMode.groomingName, false );
         }
         oDthAutoToolExporter.loadMorphs();
         
@@ -104,7 +104,7 @@ function ExecuteSteps( aSteps ) {
                     if( !ExecuteSteps( [
                         function() { oDthAutoToolExporter.prepareScene(); },
                         function() { oDthAutoToolExporter.loadCharacter(); },
-                        function() { oDthAutoToolExporter.loadGrooming( aGroomingKeys[ j ] ); },
+                        function() { oDthAutoToolExporter.loadGrooming( aGroomingKeys[ j ], true ); },
                         function() { oDthAutoToolExporter.startExport( 0, false, true ); },
                         function() { oDthAutoToolExporter.copyResult( "%1 - %2".arg( sOutputName ).arg( aGroomingKeys[ j ] ) ); }
                     ] ) ) { break; }
