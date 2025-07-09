@@ -6,7 +6,13 @@ import (
 	"github.com/go-vgo/robotgo"
 	"github.com/sirupsen/logrus"
 	"github.com/tailscale/win"
+	"syscall"
 	"time"
+)
+
+var (
+	libUser32    = syscall.NewLazyDLL("user32.dll")
+	procIsWindow = libUser32.NewProc("IsWindow")
 )
 
 type AsyncResult[T any] struct {
@@ -26,6 +32,11 @@ type WinAwait struct {
 	AwaitTimeout  time.Duration
 	SleepDuration time.Duration
 	Logger        *logrus.Logger
+}
+
+func isWindow(hwnd win.HWND) bool {
+	ret, _, _ := procIsWindow.Call(uintptr(hwnd))
+	return ret != 0
 }
 
 func (c *WinAwait) WithTitle(title string) *WinAwait {
@@ -60,7 +71,7 @@ func (c *WinAwait) AwaitOpen() (WinOnScreenInfo, error) {
 
 	maxFocusAttempts := 10
 	win.SetForegroundWindow(winInfo.Handle)
-	for notFocused := true; notFocused; notFocused = win.GetForegroundWindow() != winInfo.Handle {
+	for notFocused := true; notFocused && isWindow(winInfo.Handle); notFocused = win.GetForegroundWindow() != winInfo.Handle {
 		if maxFocusAttempts -= 1; maxFocusAttempts <= 0 {
 			return WinOnScreenInfo{}, errors.New(fmt.Sprintf("Failed to focus '%s' window", c.Title))
 		}
@@ -117,7 +128,7 @@ func AwaitWindowClosed(title string, maxWaitDuration time.Duration, logger *logr
 GetWindowInfo:
 	go func(output chan<- AsyncResult[win.HWND]) {
 		output <- AsyncResult[win.HWND]{
-			Value: win.HWND(robotgo.FindWindow(title)),
+			Value: robotgo.FindWindow(title),
 		}
 	}(asyncResult)
 
@@ -158,11 +169,11 @@ func GetWindowInfo(title string, maxWaitDuration time.Duration, logger *logrus.L
 func AwaitWindow(title string, out chan<- AsyncResult[WinOnScreenInfo]) {
 	var winHandle = win.HWND(0)
 	for {
-		winHandle = win.HWND(robotgo.FindWindow(title))
+		winHandle = robotgo.FindWindow(title)
 		if winHandle > win.HWND(0) {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	if !(winHandle > win.HWND(0)) {
