@@ -3,7 +3,8 @@
     "edit_mode": {
         "is_enabled": false,
         "exportable_name": "",
-        "clothing_name": ""
+        "clothing_name": "",
+        "grooming_name": ""
     },
     "export_settings": {
         "skip_base_model": false,
@@ -11,6 +12,7 @@
             "exportables": "",
             "templates": "",
             "clothing": "",
+            "grooming": "",
             "layers": ""
         },
         "sagan_alembic_export_directory": "",
@@ -24,20 +26,29 @@
     },
     "templates": [
         {
-            "name": "Default Female",
-            "character": [ { "name": "Genesis 8.1 Basic Female", "layers": ["genesis 8.1 basic female.duf"] } ],
-            "clothing": [ { "name": "Basic Female Wear", "layers": ["basic wear tank top.duf", "basic wear shorts.duf"] } ],
+            "name": "Default Male",
+            "character": [ { "name": "Genesis 8.1 Male", "layers": ["genesis 8.1 basic male.duf"] } ],
             "morphs": [ { "name": "DTH", "layers": ["G8.1 LINEAR JCM - Base.duf"] } ]
         },
         {
-            "name": "Default Male",
-            "character": [ { "name": "Genesis 8.1 Male", "layers": ["genesis 8.1 basic male.duf"] } ],
-            "clothing": [ { "name": "Basic Male Wear", "layers": ["basic wear t shirt.duf", "basic wear boxers.duf"] } ],
+            "name": "Default Female",
+            "character": [ { "name": "Genesis 8.1 Basic Female", "layers": ["genesis 8.1 basic female.duf"] } ],
             "morphs": [ { "name": "DTH", "layers": ["G8.1 LINEAR JCM - Base.duf"] } ]
+        },
+
+        {
+            "name": "Default Male Accessories",
+            "clothing": [ { "name": "Basic Male Wear", "layers": ["basic wear t shirt.duf", "basic wear boxers.duf"] } ],
+            "grooming": [ { "name": "Basic Male Hair", "layers": ["Armani Hair.duf"] } ]
+        },
+        {
+            "name": "Default Female Accessories",
+            "clothing": [ { "name": "Basic Female Wear", "layers": ["basic wear tank top.duf", "basic wear shorts.duf"] } ],
+            "grooming": [ { "name": "Basic Female Hair", "layers": ["Toulouse Hair.duf"] } ]
         }
     ],
     "exportables": [
-        { "name": "Adam", "templates": ["Default Male"] },
-        { "name": "Eve", "templates": ["Default Female"] }
+        { "name": "Adam", "templates": [ "Default Male", "Default Male Accessories" ] },
+        { "name": "Eve", "templates": [ "Default Female", "Default Female Accessories" ] }
     ]
 }
