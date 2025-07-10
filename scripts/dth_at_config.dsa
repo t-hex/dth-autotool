@@ -84,15 +84,9 @@ Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "templates", {
     }
 } );
 
-Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "clothing", {
+Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "accessories", {
     get: function() {
-        return this._oClothingPattern;
-    }
-} );
-
-Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "grooming", {
-    get: function() {
-        return this._oGroomingPattern;
+        return this._oAccessoriesPattern;
     }
 } );
 
@@ -107,8 +101,7 @@ Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "layers", {
 DthAutoToolExportPatternsConfig.prototype.load = function( oExportPatternsConfig ) {
     this._oExportablesPattern = null;
     this._oTemplatesPattern = null;
-    this._oClothingPattern = null;
-    this._oGroomingPattern = null;
+    this._oAccessoriesPattern = null;
     this._oLayersPattern = null;
     
     if( !oExportPatternsConfig ) { return; }
@@ -121,13 +114,9 @@ DthAutoToolExportPatternsConfig.prototype.load = function( oExportPatternsConfig
         var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.templates, "Templates export pattern must be a regexp string" );
         this._oTemplatesPattern = new RegExp( sPattern );
     }
-    if( oExportPatternsConfig.clothing && oExportPatternsConfig.clothing !== "" ) {
-        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.clothing, "Clothing export pattern must be a regexp string" );
-        this._oClothingPattern = new RegExp( sPattern );
-    }
-    if( oExportPatternsConfig.grooming && oExportPatternsConfig.grooming !== "" ) {
-        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.grooming, "Grooming export pattern must be a regexp string" );
-        this._oGroomingPattern = new RegExp( sPattern );
+    if( oExportPatternsConfig.accessories && oExportPatternsConfig.accessories !== "" ) {
+        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.accessories, "Accessories export pattern must be a regexp string" );
+        this._oAccessoriesPattern = new RegExp( sPattern );
     }
     if( oExportPatternsConfig.layers && oExportPatternsConfig.layers !== "" ) {
         var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.layers, "Layers export pattern must be a regexp string" );
@@ -741,24 +730,23 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         }
     }
 
-    // filter clothings by Clothing pattern
+    // filter accessories by Accessories pattern
     var mClothingLayerGroupsToExport = mProperties.get( "clothing" );
-    if( bNotInEditMode && oExportPatterns.clothing && !oExportPatterns.clothing !== "" ) {
+    var mGroomingLayerGroupsToExport = mProperties.get( "grooming" );
+    if( bNotInEditMode && oExportPatterns.accessories && !oExportPatterns.accessories !== "" ) {
+        // filter clothing
         var aClothingLayerGroupsKeys = mClothingLayerGroupsToExport.keys();
         for( var i=0; i<aClothingLayerGroupsKeys.length; i+=1 ) {
-            if( !oExportPatterns.clothing.test( aClothingLayerGroupsKeys[ i ] ) ) {
+            if( !oExportPatterns.accessories.test( aClothingLayerGroupsKeys[ i ] ) ) {
                 print( "Skipping exportable: '%1' clothing: '%2' due to 'clothing' pattern".arg( sName ).arg( i ) );
                 mClothingLayerGroupsToExport.remove( aClothingLayerGroupsKeys[ i ] );
             }
         }
-    }
 
-    // filter groomings by Grooming pattern
-    var mGroomingLayerGroupsToExport = mProperties.get( "grooming" );
-    if( bNotInEditMode && oExportPatterns.grooming && !oExportPatterns.grooming !== "" ) {
+        // filter grooming
         var aGroomingLayerGroupsKeys = mGroomingLayerGroupsToExport.keys();
         for( var i=0; i<aGroomingLayerGroupsKeys.length; i+=1 ) {
-            if( !oExportPatterns.grooming.test( aGroomingLayerGroupsKeys[ i ] ) ) {
+            if( !oExportPatterns.accessories.test( aGroomingLayerGroupsKeys[ i ] ) ) {
                 print( "Skipping exportable: '%1' grooming: '%2' due to 'grooming' pattern".arg( sName ).arg( i ) );
                 mGroomingLayerGroupsToExport.remove( aGroomingLayerGroupsKeys[ i ] );
             }
