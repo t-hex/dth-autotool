@@ -54,7 +54,7 @@ function ExecuteSteps( aSteps ) {
             aExportPlans.push( oExportPlan );
 
             if( !oDthAutoToolConfig.exportSettings.skipBaseModel ) { iTotalExportSteps += 1; }
-            iTotalExportSteps += oExportPlan.clothing.length;
+            iTotalExportSteps += oExportPlan.clothing.length + oExportPlan.clothing.length;
         }
 
         startProgress( text( "DTH-AutoTool export progress" ), iTotalExportSteps, true, true );

@@ -738,7 +738,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         var aClothingLayerGroupsKeys = mClothingLayerGroupsToExport.keys();
         for( var i=0; i<aClothingLayerGroupsKeys.length; i+=1 ) {
             if( !oExportPatterns.accessories.test( aClothingLayerGroupsKeys[ i ] ) ) {
-                print( "Skipping exportable: '%1' clothing: '%2' due to 'clothing' pattern".arg( sName ).arg( i ) );
+                print( "Skipping exportable: '%1' clothing: '%2' due to 'accessories' pattern".arg( sName ).arg( aClothingLayerGroupsKeys[ i ] ) );
                 mClothingLayerGroupsToExport.remove( aClothingLayerGroupsKeys[ i ] );
             }
         }
@@ -747,7 +747,7 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         var aGroomingLayerGroupsKeys = mGroomingLayerGroupsToExport.keys();
         for( var i=0; i<aGroomingLayerGroupsKeys.length; i+=1 ) {
             if( !oExportPatterns.accessories.test( aGroomingLayerGroupsKeys[ i ] ) ) {
-                print( "Skipping exportable: '%1' grooming: '%2' due to 'grooming' pattern".arg( sName ).arg( i ) );
+                print( "Skipping exportable: '%1' grooming: '%2' due to 'accessories' pattern".arg( sName ).arg( aGroomingLayerGroupsKeys[ i ] ) );
                 mGroomingLayerGroupsToExport.remove( aGroomingLayerGroupsKeys[ i ] );
             }
         }
