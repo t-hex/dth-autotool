@@ -1,10 +1,9 @@
 {
-    "version": "0.1",
+    "version": "0.2",
     "edit_mode": {
         "is_enabled": false,
         "exportable_name": "",
-        "clothing_name": "",
-        "grooming_name": ""
+        "clothing_name": ""
     },
     "export_settings": {
         "skip_base_model": false,
@@ -12,7 +11,6 @@
             "exportables": "",
             "templates": "",
             "clothing": "",
-            "grooming": "",
             "layers": ""
         },
         "sagan_alembic_export_directory": "",
