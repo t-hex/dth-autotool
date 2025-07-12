@@ -30,6 +30,18 @@ Object.defineProperty( DthAutoToolEditModeConfig.prototype, "withClothing", {
     }
 } );
 
+Object.defineProperty( DthAutoToolEditModeConfig.prototype, "groomingName", {
+    get: function() {
+        return this._sGroomingName;
+    }
+} );
+
+Object.defineProperty( DthAutoToolEditModeConfig.prototype, "withGrooming", {
+    get: function() {
+        return this._bWithGrooming;
+    }
+} );
+
 /*********************************************************************/
 // Function to load & validate edit mode given available exportables
 DthAutoToolEditModeConfig.prototype.load = function( oConfig ) {
@@ -44,6 +56,11 @@ DthAutoToolEditModeConfig.prototype.load = function( oConfig ) {
     if( oConfig.clothing_name ) {
         this._sClothingName = oConfig.clothing_name
         this._bWithClothing = true;
+    }
+
+    if( oConfig.grooming_name ) {
+        this._sGroomingName = oConfig.grooming_name;
+        this._bWithGrooming = true;
     }
 
     this._bIsEnabled = true;
@@ -67,9 +84,9 @@ Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "templates", {
     }
 } );
 
-Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "clothing", {
+Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "accessories", {
     get: function() {
-        return this._oClothingPattern;
+        return this._oAccessoriesPattern;
     }
 } );
 
@@ -84,7 +101,7 @@ Object.defineProperty( DthAutoToolExportPatternsConfig.prototype, "layers", {
 DthAutoToolExportPatternsConfig.prototype.load = function( oExportPatternsConfig ) {
     this._oExportablesPattern = null;
     this._oTemplatesPattern = null;
-    this._oClothingPattern = null;
+    this._oAccessoriesPattern = null;
     this._oLayersPattern = null;
     
     if( !oExportPatternsConfig ) { return; }
@@ -97,9 +114,9 @@ DthAutoToolExportPatternsConfig.prototype.load = function( oExportPatternsConfig
         var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.templates, "Templates export pattern must be a regexp string" );
         this._oTemplatesPattern = new RegExp( sPattern );
     }
-    if( oExportPatternsConfig.clothing && oExportPatternsConfig.clothing !== "" ) {
-        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.clothing, "Clothing export pattern must be a regexp string" );
-        this._oClothingPattern = new RegExp( sPattern );
+    if( oExportPatternsConfig.accessories && oExportPatternsConfig.accessories !== "" ) {
+        var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.accessories, "Accessories export pattern must be a regexp string" );
+        this._oAccessoriesPattern = new RegExp( sPattern );
     }
     if( oExportPatternsConfig.layers && oExportPatternsConfig.layers !== "" ) {
         var sPattern = Cast.AsNotNullOrEmpty( oExportPatternsConfig.layers, "Layers export pattern must be a regexp string" );
@@ -299,7 +316,7 @@ function DthAutoToolBaseTemplate( oConfig ) {
 /*********************************************************************/
 // All possible operation modes to choose from
 DthAutoToolBaseTemplate.LayerGroupsProperties = {
-    Categories: [ "character", "morphs", "clothing" ],
+    Categories: [ "character", "morphs", "clothing", "grooming" ],
     ExtOptions: [ "append", "prepend", "override" ]
 };
 
@@ -321,6 +338,12 @@ Object.defineProperty( DthAutoToolBaseTemplate.prototype, "clothingLayerGroups",
     }
 } );
 
+Object.defineProperty( DthAutoToolBaseTemplate.prototype, "groomingLayerGroups", {
+    get: function() {
+        return this._mGroomingLayerGroups;
+    }
+} );
+
 Object.defineProperty( DthAutoToolBaseTemplate.prototype, "morphsLayerGroups", {
     get: function() {
         return this._mMorphsLayerGroups;
@@ -333,7 +356,6 @@ DthAutoToolBaseTemplate.prototype.load = function( oConfig ) {
     this._sName = Cast.AsNotNullOrEmpty( oConfig.name, "Valid name must be provided for template" );
 
     var aLayerGroupsProperties = DthAutoToolBaseTemplate.LayerGroupsProperties.Categories;
-    var aLayerGroupsPropertiesPrefixes = DthAutoToolBaseTemplate.LayerGroupsProperties.ExtOptions;
 
     for ( var i = 0; i<aLayerGroupsProperties.length; i++ ) {
         var sBasePropName = aLayerGroupsProperties[ i ];
@@ -405,6 +427,22 @@ Object.defineProperty( DthAutoToolExportable.prototype, "overrideClothingLayerGr
 Object.defineProperty( DthAutoToolExportable.prototype, "appendClothingLayerGroups", {
     get: function() {
         return this._mAppendClothingLayerGroups;
+    }
+} );
+
+Object.defineProperty( DthAutoToolExportable.prototype, "prependGroomingLayerGroups", {
+    get: function() {
+        return this._mPrependGroomingLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "overrideGroomingLayerGroups", {
+    get: function() {
+        return this._mOverrideGroomingLayerGroups;
+    }
+} );
+Object.defineProperty( DthAutoToolExportable.prototype, "appendGroomingLayerGroups", {
+    get: function() {
+        return this._mAppendGroomingLayerGroups;
     }
 } );
 
@@ -692,19 +730,30 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         }
     }
 
-    // filter clothings by Clothing pattern
+    // filter accessories by Accessories pattern
     var mClothingLayerGroupsToExport = mProperties.get( "clothing" );
-    if( bNotInEditMode && oExportPatterns.clothing && !oExportPatterns.clothing !== "" ) {
+    var mGroomingLayerGroupsToExport = mProperties.get( "grooming" );
+    if( bNotInEditMode && oExportPatterns.accessories && !oExportPatterns.accessories !== "" ) {
+        // filter clothing
         var aClothingLayerGroupsKeys = mClothingLayerGroupsToExport.keys();
         for( var i=0; i<aClothingLayerGroupsKeys.length; i+=1 ) {
-            if( !oExportPatterns.clothing.test( aClothingLayerGroupsKeys[ i ] ) ) {
-                print( "Skipping exportables: '%1' clothing: '%2' due to 'clothing' pattern".arg( sName ).arg( i ) );
+            if( !oExportPatterns.accessories.test( aClothingLayerGroupsKeys[ i ] ) ) {
+                print( "Skipping exportable: '%1' clothing: '%2' due to 'accessories' pattern".arg( sName ).arg( aClothingLayerGroupsKeys[ i ] ) );
                 mClothingLayerGroupsToExport.remove( aClothingLayerGroupsKeys[ i ] );
+            }
+        }
+
+        // filter grooming
+        var aGroomingLayerGroupsKeys = mGroomingLayerGroupsToExport.keys();
+        for( var i=0; i<aGroomingLayerGroupsKeys.length; i+=1 ) {
+            if( !oExportPatterns.accessories.test( aGroomingLayerGroupsKeys[ i ] ) ) {
+                print( "Skipping exportable: '%1' grooming: '%2' due to 'accessories' pattern".arg( sName ).arg( aGroomingLayerGroupsKeys[ i ] ) );
+                mGroomingLayerGroupsToExport.remove( aGroomingLayerGroupsKeys[ i ] );
             }
         }
     }
 
-    var oExportPlan = new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mClothingLayerGroupsToExport, mProperties.get( "morphs" ) );
+    var oExportPlan = new DthAutoToolExportPlan( sName, mProperties.get( "character" ), mClothingLayerGroupsToExport, mGroomingLayerGroupsToExport, mProperties.get( "morphs" ) );
 
     // filter by Layer (duf file or asset) name
     if( bNotInEditMode && oExportPatterns.layers && !oExportPatterns.layers !== "" ) {
@@ -714,8 +763,11 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
         var aClothingLayers = oExportPlan.clothing.reduce( function( r, s ) {
             return r.concat( s.layers.reduce( function( u, v ) { return u.concat( v ); }, [] ) );
         }, [] );
+        var aGroomingLayers = oExportPlan.grooming.reduce( function( r, s ) {
+            return r.concat( s.layers.reduce( function( u, v ) { return u.concat( v ); }, [] ) );
+        }, [] );
         
-        var aLayers = aCharacterLayers.concat( aMorphsLayers ).concat( aClothingLayers );
+        var aLayers = aCharacterLayers.concat( aMorphsLayers ).concat( aClothingLayers ).concat( aGroomingLayers );
 
         for( var i=0; i<aLayers.length; i+=1 ) {
             if( oExportPatterns.layers.test( aLayers[ i ] ) ) {
@@ -732,8 +784,8 @@ DthAutoToolConfiguration.prototype.build = function( sName ) {
 
 /*********************************************************************/
 // DthAutoToolExportable constructor
-function DthAutoToolExportPlan( sName, mCharacter, mClothing, mMorphs ) {
-    this.load( sName, mCharacter, mClothing, mMorphs );
+function DthAutoToolExportPlan( sName, mCharacter, mClothing, mGrooming, mMorphs ) {
+    this.load( sName, mCharacter, mClothing, mGrooming, mMorphs );
 }
 
 Object.defineProperty( DthAutoToolExportPlan.prototype, "name", {
@@ -760,6 +812,15 @@ Object.defineProperty( DthAutoToolExportPlan.prototype, "clothing", {
     }
 } );
 
+Object.defineProperty( DthAutoToolExportPlan.prototype, "grooming", {
+    get: function() {
+        if( !this._cachedGroomingLayerGroups ) {
+            this._cachedGroomingLayerGroups = this._groomingLayerGroups.values();
+        }
+        return this._cachedGroomingLayerGroups;
+    }
+} );
+
 Object.defineProperty( DthAutoToolExportPlan.prototype, "morphs", {
     get: function() {
         if( !this._cachedMorphsLayers ) {
@@ -771,15 +832,17 @@ Object.defineProperty( DthAutoToolExportPlan.prototype, "morphs", {
 
 /*********************************************************************/
 // Function to populate internal layer groups variables.
-DthAutoToolExportPlan.prototype.load = function( sName, mCharacter, mClothing, mMorphs ) {
+DthAutoToolExportPlan.prototype.load = function( sName, mCharacter, mClothing, mGrooming, mMorphs ) {
     this._sName = Cast.AsNotNullOrEmpty( sName, "Exportable plan name must not be null or empty" );
 
     this._characterLayerGroups = mCharacter;
     this._clothingLayerGroups = mClothing;
+    this._groomingLayerGroups = mGrooming;
     this._morphsLayerGroups = mMorphs;
 
     // clear cache
+    this._cachedCharacterLayers = null;
     this._cachedClothingLayerGroups = null;
-    this._cachedClothingLayerGroups = null;
-    this._cachedMorphsLayerGroups = null;
+    this._cachedGroomingLayerGroups = null;
+    this._cachedMorphsLayers = null;
 };

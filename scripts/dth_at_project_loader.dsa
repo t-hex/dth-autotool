@@ -34,6 +34,10 @@ function ExecuteSteps( aSteps ) {
         {
             oDthAutoToolExporter.loadClothing( oDthAutoToolConfig.editMode.clothingName );
         }
+        if( oDthAutoToolConfig.editMode.withGrooming )
+        {
+            oDthAutoToolExporter.loadGrooming( oDthAutoToolConfig.editMode.groomingName, false );
+        }
         oDthAutoToolExporter.loadMorphs();
         
         DzHelpers.ShowPane( "DzViewportMgrPane" );
@@ -50,7 +54,7 @@ function ExecuteSteps( aSteps ) {
             aExportPlans.push( oExportPlan );
 
             if( !oDthAutoToolConfig.exportSettings.skipBaseModel ) { iTotalExportSteps += 1; }
-            iTotalExportSteps += oExportPlan.clothing.length;
+            iTotalExportSteps += oExportPlan.clothing.length + oExportPlan.clothing.length;
         }
 
         startProgress( text( "DTH-AutoTool export progress" ), iTotalExportSteps, true, true );
@@ -66,12 +70,12 @@ function ExecuteSteps( aSteps ) {
             var oDthAutoToolExporter = new DthAutoToolExporter( oExportPlan, oDthAutoToolConfig.dthAutoToolConfig, oDthAutoToolConfig.exportSettings );
 
             if( !oDthAutoToolConfig.exportSettings.skipBaseModel ) {
-                // export base character without clothings
+                // export base character only
                 if( !ExecuteSteps( [
                     function() { oDthAutoToolExporter.prepareScene(); },
                     function() { oDthAutoToolExporter.loadCharacter(); },
                     function() { oDthAutoToolExporter.loadMorphs(); },
-                    function() { oDthAutoToolExporter.startExport(); },
+                    function() { oDthAutoToolExporter.startExport( 1, true, true ); },
                     function() { oDthAutoToolExporter.copyResult( sOutputName ); }
                 ] ) ) { break; }
                 
@@ -87,8 +91,22 @@ function ExecuteSteps( aSteps ) {
                         function() { oDthAutoToolExporter.loadCharacter(); },
                         function() { oDthAutoToolExporter.loadClothing( aClothingKeys[ j ] ); },
                         function() { oDthAutoToolExporter.loadMorphs(); },
-                        function() { oDthAutoToolExporter.startExport(); },
+                        function() { oDthAutoToolExporter.startExport( 1, true, true ); },
                         function() { oDthAutoToolExporter.copyResult( "%1 - %2".arg( sOutputName ).arg( aClothingKeys[ j ] ) ); }
+                    ] ) ) { break; }
+                }
+            }
+
+            // if groomings defined each grooming set
+            var aGroomingKeys = oDthAutoToolExporter.groomings;
+            if( aGroomingKeys.length > 0 ) {
+                for( var j=0; j<aGroomingKeys.length; j+=1 ) {
+                    if( !ExecuteSteps( [
+                        function() { oDthAutoToolExporter.prepareScene(); },
+                        function() { oDthAutoToolExporter.loadCharacter(); },
+                        function() { oDthAutoToolExporter.loadGrooming( aGroomingKeys[ j ], true ); },
+                        function() { oDthAutoToolExporter.startExport( 0, false, true ); },
+                        function() { oDthAutoToolExporter.copyResult( "%1 - %2".arg( sOutputName ).arg( aGroomingKeys[ j ] ) ); }
                     ] ) ) { break; }
                 }
             }

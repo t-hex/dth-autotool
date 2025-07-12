@@ -13,6 +13,7 @@ function DthAutoToolHandler( oConfig ) {
 DthAutoToolHandler.OpModes = {
     LoadCharacter: "AutoConfirm/LoadCharacter",
     LoadClothing: "AutoConfirm/LoadCharacter",
+    LoadGrooming: "AutoConfirm/LoadCharacter",
     LoadAnimation: "AutoConfirm/ResizeTimeline",
     ExportSaganAlembicV3: "AlembicExport/HandleDialog",
     ExportDazToMayaFbx: "DazToMaya/HandleDialog"
@@ -158,6 +159,10 @@ Object.defineProperty( DthAutoToolExporter.prototype, "clothings", {
     get: function() { return this._mClothingAssets.keys(); }
 } );
 
+Object.defineProperty( DthAutoToolExporter.prototype, "groomings", {
+    get: function() { return this._mGroomingAssets.keys(); }
+} );
+
 Object.defineProperty( DthAutoToolExporter.prototype, "exportableName", {
     get: function() { return this._oExportPlan.name; }
 } );
@@ -177,6 +182,7 @@ DthAutoToolExporter.prototype.init = function( oExportPlan, oDthAutoToolConfig, 
     this._aMorphsAssets = [];
     this._nCurrentClothingIndex = -1;
     this._mClothingAssets = new OrderedKeyValueSet();
+    this._mGroomingAssets = new OrderedKeyValueSet();
 
     var oLibBrowser = new DthAutoToolLibraryBrowser();
 
@@ -213,6 +219,21 @@ DthAutoToolExporter.prototype.init = function( oExportPlan, oDthAutoToolConfig, 
             }
         }
         this._mClothingAssets.add( oClothingLayerGroup.name, aClothingLayerGroupAssets );
+    }
+
+    for( var t=0; t<this._oExportPlan.grooming.length; t+=1 ) {
+        var oGroomingLayerGroup = this._oExportPlan.grooming[ t ];
+        var aGroomingLayerGroupAssets = [];
+        for( var l=0; l<oGroomingLayerGroup.layers.length; l+=1 ) {
+            var sAssetNamePattern = oGroomingLayerGroup.layers[ l ];
+            var oAsset = oLibBrowser.search( sAssetNamePattern );
+            if( oAsset ) {
+                aGroomingLayerGroupAssets.push( oAsset );
+            } else {
+                throw new Error( "Asset not found: %1".arg( sAssetNamePattern ) );
+            }
+        }
+        this._mGroomingAssets.add( oGroomingLayerGroup.name, aGroomingLayerGroupAssets );
     }
 };
 
@@ -367,8 +388,43 @@ DthAutoToolExporter.prototype.loadClothing = function( sClothing ) {
 };
 
 /*********************************************************************/
+// Function to check if exportable contains clothing layer group with given name
+DthAutoToolExporter.prototype.loadGrooming = function( sGrooming, bHideCharacter ) {
+    print( "Loading grooming layers \"%1\" for exportable \"%2\"".arg( sGrooming ).arg( this.exportableName ) );
+
+    if( !this._oPrimaryFigure ) {
+        throw new Error( "Character not loaded yet - primary figure not found" );
+    }
+
+    Assert.NotNullOrEmpty( sGrooming );
+    if( !this._mGroomingAssets.has( sGrooming ) ) {
+        throw new Error( "Grooming assets not found: %1".arg( sGrooming ) );
+    }
+    var aGroomingAssets = this._mGroomingAssets.get( sGrooming );
+
+    // setup invisibility on all nodes before loading groom layers when exporting
+    if( bHideCharacter ) {
+        var aNonGroomNodes = Scene.getNodeList();
+        for( var i=0; i<aNonGroomNodes.length; i+=1 ) {
+            aNonGroomNodes[ i ].setVisible( false );
+        }
+    }
+
+    var oContentMgr = App.getContentMgr();
+
+    for( var c=0; c<aGroomingAssets.length; c+=1 ) {
+        var oGroomingAsset = aGroomingAssets[ c ];
+        print( "Loading grooming asset: %1".arg( oGroomingAsset.assetName ) );
+        function callback() {
+            oContentMgr.loadAsset( oGroomingAsset, true );
+        }
+        this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.LoadGrooming, callback, false, null );
+    }
+};
+
+/*********************************************************************/
 // Prepare all subdivision levels to be ready for DTH workflow
-DthAutoToolExporter.prototype.setupSubdivisionLevels = function() {
+DthAutoToolExporter.prototype.setupSubdivisionLevels = function( nSubDLevel ) {
     if( !this._oPrimaryFigure ) {
         throw new Error( "Character not loaded yet - primary figure not found" );
     }
@@ -390,7 +446,7 @@ DthAutoToolExporter.prototype.setupSubdivisionLevels = function() {
                 var oPropSubDLevel = oPrimaryFigureShape.findProperty( "SubDIALevel" );
                 if( oPropSubDLevel ) {
                     bHasSubDProperty = true;
-                    oPropSubDLevel.setValue( 1 );
+                    oPropSubDLevel.setValue( nSubDLevel );
                 }
 
                 var oPropRenderSubDLevel= oPrimaryFigureShape.findProperty( "SubDRenderLevel" );
@@ -398,7 +454,7 @@ DthAutoToolExporter.prototype.setupSubdivisionLevels = function() {
                     bHasSubDProperty = true;
                     // NOTE: from some reason, "SubDRenderLevel" setValue sets the actual
                     //   integer value to the parameter + 1, therefore passing 0 value
-                    oPropRenderSubDLevel.setValue( 0 );
+                    oPropRenderSubDLevel.setValue( nSubDLevel-1 );
                 }
 
                 if ( bHasSubDProperty ) {
@@ -469,33 +525,41 @@ DthAutoToolExporter.prototype.prepareScene = function() {
 
 /*********************************************************************/
 // Function to export loaded assets
-DthAutoToolExporter.prototype.startExport = function( sClothing ) {
+DthAutoToolExporter.prototype.startExport = function( nSubDLevel, bExportFbx, bExportAbc ) {
     print( "Exporting \"%1\"".arg( this.exportableName ) );
 
-    var nSubDNodesCount = this.setupSubdivisionLevels();
+    if( nSubDLevel < 0 ) {
+        nSubDLevel = 0;
+    }
+
+    var nSubDNodesCount = this.setupSubdivisionLevels( nSubDLevel );
     
     // viewport must be visible in order for sagan alembic exporter to work properly
     DzHelpers.ShowPane( "DzViewportMgrPane" );
 
     Scene.setFrame( 0 );
-    var oSaganAlembicExporterAction = DzHelpers.GetAction( "Sagan Alembic Exporter v3" );
-    function fSaganAlembicExportCallback() {
-        oSaganAlembicExporterAction.trigger();
-    }
-    var mSaganAlembicExporterParams = new OrderedKeyValueSet();
+    if( bExportAbc ) {
+        var oSaganAlembicExporterAction = DzHelpers.GetAction( "Sagan Alembic Exporter v3" );
+        function fSaganAlembicExportCallback() {
+            oSaganAlembicExporterAction.trigger();
+        }
+        var mSaganAlembicExporterParams = new OrderedKeyValueSet();
 
-    mSaganAlembicExporterParams.add( DthAutoToolHandler.CmdParams.SaganAlembicExporterOutputPath, this._oExportSettings.saganAlembicExportDirAbsPath );
-    mSaganAlembicExporterParams.add( DthAutoToolHandler.CmdParams.SaganAlembicExporterEndFrame, DzHelpers.GetPlayRangeEndFrame() );
-    this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportSaganAlembicV3, fSaganAlembicExportCallback, false, mSaganAlembicExporterParams );
-
-    var oSendToMayaAction = DzHelpers.GetAction( "Send to Maya" );
-    function fSendToMayaExportCallback() {
-        oSendToMayaAction.trigger();
+        mSaganAlembicExporterParams.add( DthAutoToolHandler.CmdParams.SaganAlembicExporterOutputPath, this._oExportSettings.saganAlembicExportDirAbsPath );
+        mSaganAlembicExporterParams.add( DthAutoToolHandler.CmdParams.SaganAlembicExporterEndFrame, DzHelpers.GetPlayRangeEndFrame() );
+        this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportSaganAlembicV3, fSaganAlembicExportCallback, false, mSaganAlembicExporterParams );
     }
-    var mSendToMayaParams = new OrderedKeyValueSet();
-    mSendToMayaParams.add( DthAutoToolHandler.CmdParams.ExportAssetName, this._oExportPlan.name );
-    mSendToMayaParams.add( DthAutoToolHandler.CmdParams.SubDivisionShapesCount, nSubDNodesCount );
-    this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportDazToMayaFbx, fSendToMayaExportCallback, false, mSendToMayaParams );
+
+    if( bExportFbx ) {
+        var oSendToMayaAction = DzHelpers.GetAction( "Send to Maya" );
+        function fSendToMayaExportCallback() {
+            oSendToMayaAction.trigger();
+        }
+        var mSendToMayaParams = new OrderedKeyValueSet();
+        mSendToMayaParams.add( DthAutoToolHandler.CmdParams.ExportAssetName, this._oExportPlan.name );
+        mSendToMayaParams.add( DthAutoToolHandler.CmdParams.SubDivisionShapesCount, nSubDNodesCount );
+        this._oDthAutoToolHandler.run( DthAutoToolHandler.OpModes.ExportDazToMayaFbx, fSendToMayaExportCallback, false, mSendToMayaParams );
+    }
 
     DzHelpers.ShowPane( "DzScriptPane" );
 };

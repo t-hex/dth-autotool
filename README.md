@@ -52,20 +52,21 @@ It is highly recommended to install `tesseract` app when using `visual-lookup` m
 
 # How it works
 - Prepare your assets upfront and save them as a `*.duf` files. DTH-AutoTool app uses `Asset Manager` API to locate the assets. Your *.duf files are automatically added to DAZ database. Manually copied `*.duf` files to common DAZ directories can be browsed from UI as files but are not part of database automatically (scanning files is not supported in DTH-AutoTool at the moment). The easiest way to index them is to add assets to existing categories or for example create entirely new category (e.g. DTH category from the entire _DazToHue_ folder).
-- In `project.config.json` under `templates` section, list all templates with their `character`, `clothing` and/or `morphs` subsections. None of them is mandatory for template, which means you can split different layers across templates and combine them later in `exportables` section. Every template name must be unique.
-- `character`, `clothing` and/or `morphs` subsections contains _layer groups_. Every _layer group_ must have a globally unique name and contains array of layers (`*duf` files) that logically belongs together (for example, some parts of clothings may exist as separate DAZ assets, but you may want to handle it as a single group/unit - single outfit).
-- `templates` can only be referenced in `exportables`. Exportables are producing real outpus. You can combine several templates together in one exportable and _override_ specific layer groups, _prepend_ or _append_ to them, or completely _replace_ entire `character`, `clothing` or `morphs` sections if needed. This provides higher granularity in setting up specific characters/figures to export.
+- In `project.config.json` under `templates` section, list all templates with their `character`, `clothing`, `grooming` and/or `morphs` subsections. None of them is mandatory for template, which means you can split different layers across templates and combine them later in `exportables` section. Every template name must be unique.
+- `character`, `clothing`, `grooming` and/or `morphs` subsections contains _layer groups_. Every _layer group_ must have a globally unique name and contains array of layers (`*duf` files) that logically belongs together (for example, some parts of clothings may exist as separate DAZ assets, but you may want to handle it as a single group/unit - single outfit).
+- `templates` can only be referenced in `exportables`. Exportables are producing real outpus. You can combine several templates together in one exportable and _override_ specific layer groups, _prepend_ or _append_ to them, or completely _replace_ entire `character`, `clothing`, `grooming` or `morphs` sections if needed. This provides higher granularity in setting up specific characters/figures to export.
 
 ### Character vs. Clothing vs. Morphs
 - `character` layers are applied first and should define the characters basic look. If you need, you can apply also clothing `*.duf` files but the idea of these layers is their single appliance at the beginning of the pipeline.
 - `clothing` layers are applied after the `character` layers but **always only one clothing** per pipeline run. After one of the clothings is applied, `morphs` layers are loaded.
+- `grooming` layers are applied after the `character` layers but **always only one grooming** per pipeline run. `morphs` layers are _not_ loaded with groomings. Character is hidden and timeline is shrunk to minimize output file size. **Only alembic cache** is exported for grooming assets. Subdivision is also reduced to 0-level as it is better to increase it on-demand later in Houdini part of DTH workflow.
 - `morphs` layers are loaded after `clothing` and usually should contain timeline JCM frames or morphs to be handled by DTH workflow.
 - Once layers are loaded, export is triggered. Then the process is repeated for each available `clothing`.
 
 ### Edit mode
 - If you need to load only the layers without export being triggered, use `edit_mode` configuration section.
 - Set `is_enabled` to `true` and specify `exportable_name` to valid value.
-- If `exportable` has clothing layers, you can also specify `clothing_name` to load.
+- If `exportable` has clothing layers, you can also specify `clothing_name` or `grooming_name` to load.
 
 ### Export filter patterns
 Can be used to narrow down list of exportables and clothings to export (for example if you change only some of them and need to re-export again).
@@ -77,7 +78,7 @@ You can use [regex101.com] to test your regular expression (make sure you are us
 - `exportables`: filters by exportable names.
 - `templates`: filters by template names.
 - `layers`: filters by layer values (e.g. `duf` files) across all exportables/templates. Only exportables with matched layer values will be entirely exported.
-- `clothing`: this filter pattern can be used to export only matched clothings.
+- `accessories`: this filter is applied on all accessories (clothings and groomings) at the same time. Only matched layer groups will be exported not entire exportables.
 
 # How to compile
 This project depends on [robotgo](https://github.com/go-vgo/robotgo) and [gocv](https://github.com/vcaesar/gcv) libraries.

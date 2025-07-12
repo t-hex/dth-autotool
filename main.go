@@ -70,7 +70,7 @@ func main() {
 				LoadSaganConfigWindowTitle:          "Select Config File",
 				LoadSaganConfigWindowMaxWaitSeconds: 10,
 				ExpProgressWindowTitle:              "Export Progress",
-				ExpProgressWindowMaxWaitSeconds:     10,
+				ExpProgressWindowMaxWaitSeconds:     5,
 				MaxExportDurationMinutes:            5,
 				TimelineEndFrame:                    DthAutoToolCmdOptions.EndFrame,
 				OutputPath:                          DthAutoToolCmdOptions.SaganOutputPath,
